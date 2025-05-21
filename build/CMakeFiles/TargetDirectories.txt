@@ -1,0 +1,9 @@
+/home/Arvand/wearily/WearilyNet/build/CMakeFiles/install/strip.dir
+/home/Arvand/wearily/WearilyNet/build/CMakeFiles/install/local.dir
+/home/Arvand/wearily/WearilyNet/build/CMakeFiles/edit_cache.dir
+/home/Arvand/wearily/WearilyNet/build/CMakeFiles/uninstall.dir
+/home/Arvand/wearily/WearilyNet/build/CMakeFiles/install.dir
+/home/Arvand/wearily/WearilyNet/build/CMakeFiles/list_install_components.dir
+/home/Arvand/wearily/WearilyNet/build/CMakeFiles/rebuild_cache.dir
+/home/Arvand/wearily/WearilyNet/build/CMakeFiles/WeaNet.dir
+/home/Arvand/wearily/WearilyNet/build/CMakeFiles/WeaNet_autogen.dir

@@ -1,0 +1,161 @@
+{
+	"BUILD_DIR" : "/home/Arvand/wearily/WearilyNet/build/WeaNet_autogen",
+	"CMAKE_BINARY_DIR" : "/home/Arvand/wearily/WearilyNet/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "/home/Arvand/wearily/WearilyNet/build",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/home/Arvand/wearily/WearilyNet",
+	"CMAKE_EXECUTABLE" : "/usr/bin/cmake",
+	"CMAKE_LIST_FILES" : 
+	[
+		"/home/Arvand/wearily/WearilyNet/CMakeLists.txt",
+		"/home/Arvand/wearily/WearilyNet/build/CMakeFiles/3.20.4/CMakeSystem.cmake",
+		"/usr/share/cmake/Modules/CMakeSystemSpecificInitialize.cmake",
+		"/home/Arvand/wearily/WearilyNet/build/CMakeFiles/3.20.4/CMakeCXXCompiler.cmake",
+		"/usr/share/cmake/Modules/CMakeSystemSpecificInformation.cmake",
+		"/usr/share/cmake/Modules/CMakeGenericSystem.cmake",
+		"/usr/share/cmake/Modules/CMakeInitializeConfigs.cmake",
+		"/usr/share/cmake/Modules/Platform/Linux.cmake",
+		"/usr/share/cmake/Modules/Platform/UnixPaths.cmake",
+		"/usr/share/cmake/Modules/CMakeCXXInformation.cmake",
+		"/usr/share/cmake/Modules/CMakeLanguageInformation.cmake",
+		"/usr/share/cmake/Modules/Compiler/GNU-CXX.cmake",
+		"/usr/share/cmake/Modules/Compiler/GNU.cmake",
+		"/usr/share/cmake/Modules/Compiler/CMakeCommonCompilerMacros.cmake",
+		"/usr/share/cmake/Modules/Platform/Linux-GNU-CXX.cmake",
+		"/usr/share/cmake/Modules/Platform/Linux-GNU.cmake",
+		"/usr/share/cmake/Modules/CMakeCommonLanguageInclude.cmake",
+		"/usr/lib64/cmake/Qt5/Qt5ConfigVersion.cmake",
+		"/usr/lib64/cmake/Qt5/Qt5Config.cmake",
+		"/usr/lib64/cmake/Qt5/Qt5ConfigVersion.cmake",
+		"/usr/lib64/cmake/Qt5/Qt5Config.cmake",
+		"/usr/lib64/cmake/Qt5/Qt5ModuleLocation.cmake",
+		"/usr/lib64/cmake/Qt5Core/Qt5CoreConfigVersion.cmake",
+		"/usr/lib64/cmake/Qt5Core/Qt5CoreConfig.cmake",
+		"/usr/lib64/cmake/Qt5Core/Qt5CoreConfigExtras.cmake",
+		"/usr/lib64/cmake/Qt5Core/Qt5CoreConfigExtrasMkspecDir.cmake",
+		"/usr/lib64/cmake/Qt5Core/Qt5CoreMacros.cmake",
+		"/usr/share/cmake/Modules/CMakeParseArguments.cmake",
+		"/usr/share/cmake/Modules/CMakePackageConfigHelpers.cmake",
+		"/usr/share/cmake/Modules/WriteBasicConfigVersionFile.cmake",
+		"/usr/share/cmake/Modules/BasicConfigVersion-AnyNewerVersion.cmake.in",
+		"/home/Arvand/wearily/WearilyNet/WeaNetConfig.cmake.in",
+		"/home/Arvand/wearily/WearilyNet/WeaNetUninstall.cmake.in"
+	],
+	"CMAKE_SOURCE_DIR" : "/home/Arvand/wearily/WearilyNet",
+	"DEP_FILE" : "",
+	"DEP_FILE_RULE_NAME" : "",
+	"HEADERS" : 
+	[
+		[
+			"/home/Arvand/wearily/WearilyNet/WeaNetConfig.cmake.in",
+			"MU",
+			"EWIEGA46WW/moc_WeaNetConfig.cmake.cpp",
+			null
+		],
+		[
+			"/home/Arvand/wearily/WearilyNet/WeaNetUninstall.cmake.in",
+			"MU",
+			"EWIEGA46WW/moc_WeaNetUninstall.cmake.cpp",
+			null
+		],
+		[
+			"/home/Arvand/wearily/WearilyNet/include/WeaNet/Internal/common.h",
+			"MU",
+			"P2PX4AH4A6/moc_common.cpp",
+			null
+		],
+		[
+			"/home/Arvand/wearily/WearilyNet/include/WeaNet/Internal/error.h",
+			"MU",
+			"P2PX4AH4A6/moc_error.cpp",
+			null
+		],
+		[
+			"/home/Arvand/wearily/WearilyNet/include/WeaNet/Internal/net_enums.h",
+			"MU",
+			"P2PX4AH4A6/moc_net_enums.cpp",
+			null
+		],
+		[
+			"/home/Arvand/wearily/WearilyNet/include/WeaNet/Internal/network.h",
+			"MU",
+			"P2PX4AH4A6/moc_network.cpp",
+			null
+		],
+		[
+			"/home/Arvand/wearily/WearilyNet/include/WeaNet/Tcp.h",
+			"MU",
+			"YSEUW6F525/moc_Tcp.cpp",
+			null
+		],
+		[
+			"/home/Arvand/wearily/WearilyNet/include/WeaNet/Udp.h",
+			"MU",
+			"YSEUW6F525/moc_Udp.cpp",
+			null
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "/home/Arvand/wearily/WearilyNet/build/WeaNet_autogen/include",
+	"MOC_COMPILATION_FILE" : "/home/Arvand/wearily/WearilyNet/build/WeaNet_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : [ "QT_CORE_LIB", "QT_NO_DEBUG", "WeaNet_EXPORTS" ],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"/home/Arvand/wearily/WearilyNet/include",
+		"/usr/include/qt5",
+		"/usr/include/qt5/QtCore",
+		"/usr/lib64/qt5/mkspecs/linux-g++",
+		"/usr/include/c++/7",
+		"/usr/include/c++/7/x86_64-suse-linux",
+		"/usr/include/c++/7/backward",
+		"/usr/lib64/gcc/x86_64-suse-linux/7/include",
+		"/usr/local/include",
+		"/usr/lib64/gcc/x86_64-suse-linux/7/include-fixed",
+		"/usr/x86_64-suse-linux/include",
+		"/usr/include"
+	],
+	"MOC_MACRO_NAMES" : [ "Q_OBJECT", "Q_GADGET", "Q_NAMESPACE", "Q_NAMESPACE_EXPORT" ],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : 
+	[
+		"/usr/bin/c++",
+		"-dM",
+		"-E",
+		"-c",
+		"/usr/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
+	],
+	"MOC_PREDEFS_FILE" : "/home/Arvand/wearily/WearilyNet/build/WeaNet_autogen/moc_predefs.h",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 4,
+	"PARSE_CACHE_FILE" : "/home/Arvand/wearily/WearilyNet/build/CMakeFiles/WeaNet_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "/usr/lib64/qt5/bin/moc",
+	"QT_UIC_EXECUTABLE" : "",
+	"QT_VERSION_MAJOR" : 5,
+	"QT_VERSION_MINOR" : 15,
+	"SETTINGS_FILE" : "/home/Arvand/wearily/WearilyNet/build/CMakeFiles/WeaNet_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[ "/home/Arvand/wearily/WearilyNet/src/Tcp.cpp", "MU", null ],
+		[ "/home/Arvand/wearily/WearilyNet/src/Udp.cpp", "MU", null ],
+		[ "/home/Arvand/wearily/WearilyNet/src/internal/error.cpp", "MU", null ],
+		[
+			"/home/Arvand/wearily/WearilyNet/src/internal/network.cpp",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"VERBOSITY" : 0
+}

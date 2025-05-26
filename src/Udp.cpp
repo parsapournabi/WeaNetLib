@@ -79,7 +79,11 @@ bool Udp::bind(const char *host, int port) {
 
     // Poll Config
     m_fds.fd = m_sockfd;
+#ifdef _WIN32
+    m_fds.events = POLLRDNORM;
+#else
     m_fds.events = POLLIN;
+#endif
 
     // Definition
     m_peek = 0;
@@ -204,15 +208,21 @@ void Udp::handlerRead() {
         // Poll workflow
 #ifdef _WIN32
         int ret_fd = WSAPoll(&m_fds, 1, timeout_ms);
+        if (ret_fd > 0 && (m_fds.revents & POLLRDNORM)) {
+            if (m_peek <= 0) {
+                m_peek++;
+                emit readyRead();
+            }
+        }
 #else
         int ret_fd = poll(&m_fds, 1, timeout_ms);
-#endif
         if (ret_fd > 0 && (m_fds.revents & POLLIN)) {
             if (m_peek <= 0) {
                 m_peek++;
                 emit readyRead();
             }
         }
+#endif
     }
 
 }

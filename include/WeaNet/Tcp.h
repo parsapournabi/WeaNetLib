@@ -197,12 +197,12 @@ private:
 
 #ifdef _WIN32
     /// All Poll files will store here.
-    /// @note linux
-    std::vector<pollfd> m_polls;
-#else
-    /// All Poll files will store here.
     /// @note windows
     std::vector<WSAPOLLFD> m_polls;
+#else
+    /// All Poll files will store here.
+    /// @note linux
+    std::vector<pollfd> m_polls;
 #endif
 
     /// @details getter & setter variable of maxPendingConnections()

@@ -8,12 +8,21 @@
 #include <bits/stdc++.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <poll.h>
-#include <sys/epoll.h>
-#include <fcntl.h>
+#ifdef _WIN32
+    #define _WIN32_WINNT 0x0600
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #include <windows.h>
+    #include <mswsock.h>
+//    typedef SOCKET SockType
+#else
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <poll.h>
+    #include <fcntl.h>
+//    typedef int SockType
+#endif
 #include <unordered_map>
 
 #include <QObject>

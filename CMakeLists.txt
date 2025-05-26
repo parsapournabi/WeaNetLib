@@ -42,6 +42,12 @@ target_include_directories(WeaNet
 
 target_link_libraries(WeaNet PUBLIC Qt${QT_VERSION_MAJOR}::Core)
 
+# Including Windows WinSock
+if (WIN32)
+    target_link_libraries(WeaNet PUBLIC wsock32 ws2_32)
+endif()
+
+
 # Library Install (WeaNet)
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -90,7 +96,7 @@ install(EXPORT WeaNetTargets
 option(BUILD_EXAMPLES "Build example application for WeaNet" ON)
 
 if(BUILD_EXAMPLES)
-        add_subdirectory(examples EXCLUDE_FROM_ALL)
+#        add_subdirectory(examples EXCLUDE_FROM_ALL)
 
 endif()
 

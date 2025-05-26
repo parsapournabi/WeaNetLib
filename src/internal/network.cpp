@@ -24,6 +24,10 @@ void Network::setBlockingMode(const bool blocking) {
         return;
     }
     // Get socket flags.
+#ifdef _WIN32
+    u_long mode = blocking ? 0 : 1;
+    int sock_flags = ioctlsocket(m_sockfd, FIONBIO, &mode);
+#else
     int sock_flags = fcntl(m_sockfd, F_GETFL, 0);
     if (sock_flags < 0) {
         // Commit message
@@ -47,6 +51,7 @@ void Network::setBlockingMode(const bool blocking) {
         occurError(m_sockfd, SocketError::SocketFlagError, message);
         return;
     }
+#endif
     // Update state mode successfully set
     std::stringstream update_message;
     update_message << "Socket successfully set to " << (blocking ? "BLOCKING" : "NON-BLOCKING") << " Mode";
@@ -66,9 +71,15 @@ int Network::socketOption(SocketOption option) {
         return -1;
     // opt var definition
     int opt;
+#ifdef _WIN32
+    int optlen = sizeof(opt);
+    // get socket option
+    int g = getsockopt(m_sockfd, SOL_SOCKET, option,(char *)&opt, &optlen);
+#else
     socklen_t optlen = sizeof(opt);
     // get socket option
     int g = getsockopt(m_sockfd, SOL_SOCKET, option, &opt, &optlen);
+#endif
     if (occurError(g, SocketError::SocketOptionError, "get socket option failed!"))
         return -1;
     // return opt var if getsockopt has no error
@@ -79,8 +90,13 @@ int Network::socketOption(SocketOption option) {
 void Network::setServerReuseOption() {
     // Reuse Addr option...
     int opt_reuse = 1;
+#ifdef _WIN32
+    int opt_reuselen = sizeof(opt_reuse);
+    int reuse_resp = setsockopt(m_sockfd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt_reuse, opt_reuselen);
+#else
     socklen_t opt_reuselen = sizeof(opt_reuse);
     int reuse_resp = setsockopt(m_sockfd, SOL_SOCKET, SO_REUSEADDR, &opt_reuse, opt_reuselen);
+#endif
     occurError(reuse_resp, SocketError::SocketOptionError, "Failed to set REUSEADDR option!");
 }
 
@@ -90,16 +106,26 @@ void Network::setSocketOptions() {
     timeval rcv_timeout;
     rcv_timeout.tv_sec = readTimeout();
     rcv_timeout.tv_usec = 0;
+#ifdef _WIN32
+    int rcv_timelen = sizeof(rcv_timeout);
+    int rcv_resp = setsockopt(m_sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&rcv_timeout, rcv_timelen);
+#else
     socklen_t rcv_timelen = sizeof(rcv_timeout);
     int rcv_resp = setsockopt(m_sockfd, SOL_SOCKET, SO_RCVTIMEO, &rcv_timeout, rcv_timelen);
+#endif
     occurError(rcv_resp, SocketError::SocketOptionError, "Failed to set SO_RCVTIMEO option!");
 
     // Write Timeout option...
     timeval snd_timeout;
     snd_timeout.tv_sec = writeTimeout();
     snd_timeout.tv_usec = 0;
+#ifdef _WIN32
+    int snd_timelen = sizeof(snd_timeout);
+    int snd_resp = setsockopt(m_sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char *)&snd_timeout, snd_timelen);
+#else
     socklen_t snd_timelen = sizeof(snd_timeout);
     int snd_resp = setsockopt(m_sockfd, SOL_SOCKET, SO_SNDTIMEO, &snd_timeout, snd_timelen);
+#endif
     occurError(snd_resp, SocketError::SocketOptionError, "Failed to set SO_SNDTIMEO option!");
 }
 
@@ -164,7 +190,11 @@ void Network::close() {
     cleanUp();
 
     // Closing socket.
+#ifdef _WIN32
+    ::closesocket(m_sockfd);
+#else
     ::close(m_sockfd);
+#endif
     m_sockfd = -1;
 
 }
@@ -277,10 +307,19 @@ bool Network::occurError(int target, SocketError socketError, const char *err_me
             message = time_stream.str() + " [UDP] " + message;
             break;
         }
+#ifdef _WIN32
+        int err = WSAGetLastError();
+        char *msg = nullptr;
+        FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                       NULL, err, 0, (LPSTR)&msg, 0, NULL);
+        message = message + " Error details: " + msg;
+        LocalFree(msg);
+#else
         message = message + " Error details: " + strerror(errno);
+#endif
         if (debugMode()) {
             std::cerr << message.c_str() << std::endl;
-            print_stacktrace();
+//            print_stacktrace();
         }
         emit errorOccured(socketError, message.c_str());
         return true;

@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -O3 -DNDEBUG -shared -Wl,-soname,libWeaNet.so -o libWeaNet.so CMakeFiles/WeaNet.dir/WeaNet_autogen/mocs_compilation.cpp.o CMakeFiles/WeaNet.dir/src/Tcp.cpp.o CMakeFiles/WeaNet.dir/src/Udp.cpp.o CMakeFiles/WeaNet.dir/src/internal/error.cpp.o CMakeFiles/WeaNet.dir/src/internal/network.cpp.o  /usr/lib64/libQt5Core.so.5.15.8 

@@ -1,1 +1,0 @@
-/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/CI_CD.dir/CI_CD_autogen/mocs_compilation.cpp.o CMakeFiles/CI_CD.dir/scripts/CI-CD.cpp.o CMakeFiles/CI_CD.dir/scripts/main.cpp.o -o CI_CD 

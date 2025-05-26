@@ -125,7 +125,11 @@ void TcpClient::read() {
         occurError(-1, SocketError::UnsupportedSocketOperationError, "Socket isn't connect!");
         return;
     }
+#ifdef _WIN32
+    int recv_bytes = ::recv(m_sockfd, (char *)m_buffer.data(), bufferSize(), 0);
+#else
     int recv_bytes = ::recv(m_sockfd, (void *)m_buffer.data(), bufferSize(), 0);
+#endif
     occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
 
     // Data received
@@ -157,7 +161,11 @@ int TcpClient::write(void *buffer, int flags) {
         return -1;
     }
 
+#ifdef _WIN32
+    int s = ::send(m_sockfd, (char *)buffer, bufferSize(), flags);
+#else
     int s = ::send(m_sockfd, buffer, bufferSize(), flags);
+#endif
     if(!occurError(s, SocketError::SocketTimeoutError, "No bytes sent!", 1))
         emit bytesWritten(s);
     return s;
@@ -204,7 +212,11 @@ void TcpClient::handlerRead() {
     else {
         // Poll timeout
         int timeout_ms = 100;
+#ifdef _WIN32
+        int ret_fd = WSAPoll(&m_fds, 1, timeout_ms);
+#else
         int ret_fd = poll(&m_fds, 1, timeout_ms);
+#endif
         if (ret_fd > 0 && (m_fds.revents & POLLIN)) {
             if (m_peek <= 0) {
                 m_peek++;
@@ -343,7 +355,11 @@ void TcpServer::handlerPoll() {
             QThread::msleep(250);
             continue;
         }
+#ifdef _WIN32
+        int ret = WSAPoll(m_polls.data(), m_polls.size(), TIMEOUT);
+#else
         int ret = poll(m_polls.data(), m_polls.size(), TIMEOUT);
+#endif
         // Error handling
         if (ret < 0) {
             auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now() - st).count();

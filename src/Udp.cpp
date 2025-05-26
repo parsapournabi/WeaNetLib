@@ -126,7 +126,11 @@ int Udp::writeDatagram(void *buffer, int flags) {
         return -1;
     }
 
+#ifdef _WIN32
+    int s = ::sendto(m_sockfd, (char *)buffer, bufferSize(), 0, (sockaddr *)&m_recvaddr, m_recvlen);
+#else
     int s = ::sendto(m_sockfd, buffer, bufferSize(), MSG_CONFIRM, (sockaddr *)&m_recvaddr, m_recvlen);
+#endif
     if(!occurError(s, SocketError::SocketTimeoutError, "No bytes sent!", 1))
         emit bytesWritten(s);
     return s;
@@ -144,7 +148,11 @@ int Udp::writeDatagram(void *buffer, const char *host, int port, int flags) {
     addr.sin_addr.s_addr = inet_addr(host);
 
 
+#ifdef _WIN32
+    int s = ::sendto(m_sockfd, (char *)buffer, bufferSize(), 0, (sockaddr *)&addr, addrlen);
+#else
     int s = ::sendto(m_sockfd, buffer, bufferSize(), MSG_CONFIRM, (sockaddr *)&addr, addrlen);
+#endif
     if(!occurError(s, SocketError::SocketTimeoutError, "No bytes sent!", 1))
         emit bytesWritten(s);
     return s;
@@ -190,7 +198,11 @@ void Udp::handlerRead() {
         // Poll timeout
         int timeout_ms = 100;
         // Poll workflow
+#ifdef _WIN32
+        int ret_fd = WSAPoll(&m_fds, 1, timeout_ms);
+#else
         int ret_fd = poll(&m_fds, 1, timeout_ms);
+#endif
         if (ret_fd > 0 && (m_fds.revents & POLLIN)) {
             if (m_peek <= 0) {
                 m_peek++;

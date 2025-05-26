@@ -6,6 +6,9 @@ using Clock = std::chrono::high_resolution_clock;
 namespace WeaNet {
 // TCP CLIENT CLASS START
 TcpClient::TcpClient() {
+#ifdef _WIN32
+    WsaInitializer::ensureInitialized();
+#endif
 
     // definition
     this->m_buffer.resize(m_bufferSize);
@@ -27,6 +30,28 @@ TcpClient::TcpClient() {
     workerThread->start();
 }
 
+#ifdef _WIN32
+TcpClient::TcpClient(int sockfd, WSAPOLLFD fds) {
+
+    // definition
+    this->m_buffer.resize(m_bufferSize);
+    this->m_socketType = SocketType::Client;
+
+    this->m_pollLoop = false;
+    this->m_isConnected = true;
+
+    // workflow
+    m_sockfd = sockfd;
+    m_fds = fds;
+
+    // SetOptions
+    setSocketOptions();
+
+    // Monitor
+
+}
+#else
+
 TcpClient::TcpClient(int sockfd, struct pollfd fds) {
 
     // definition
@@ -46,6 +71,7 @@ TcpClient::TcpClient(int sockfd, struct pollfd fds) {
     // Monitor
 
 }
+#endif
 
 TcpClient::~TcpClient() {
     TcpClient::close();
@@ -100,7 +126,11 @@ bool TcpClient::connectToHost(const char* host, int port) {
 
         // Poll Config
         m_fds.fd = m_sockfd;
+#ifdef _WIN32
+        m_fds.events = POLLRDNORM;
+#else
         m_fds.events = POLLIN;
+#endif
     }
     else
         // Updating status
@@ -130,7 +160,7 @@ void TcpClient::read() {
 #else
     int recv_bytes = ::recv(m_sockfd, (void *)m_buffer.data(), bufferSize(), 0);
 #endif
-    occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
+//    occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
 
     // Data received
     if (recv_bytes > 0) {
@@ -211,24 +241,34 @@ void TcpClient::handlerRead() {
     }
     else {
         // Poll timeout
-        int timeout_ms = 100;
+        int timeout_ms = 200;
 #ifdef _WIN32
         int ret_fd = WSAPoll(&m_fds, 1, timeout_ms);
+        if (ret_fd > 0 && (m_fds.revents & POLLRDNORM)) {
+            if (m_peek <= 0) {
+                m_peek++;
+                emit readyRead();
+            }
+        }
 #else
         int ret_fd = poll(&m_fds, 1, timeout_ms);
-#endif
         if (ret_fd > 0 && (m_fds.revents & POLLIN)) {
             if (m_peek <= 0) {
                 m_peek++;
                 emit readyRead();
             }
         }
+#endif
     }
 }
 // TCP CLIENT CLASS END
 
 // TCP SERVER CLASS START
 TcpServer::TcpServer() {
+
+#ifdef _WIN32
+    WsaInitializer::ensureInitialized();
+#endif
 
     // definition
     this->m_socketType = SocketType::Server;
@@ -300,9 +340,15 @@ bool TcpServer::listen(const char *host, int port) {
         return false;
 
     // Poll Cofigurations
+#ifdef _WIN32
+    WSAPOLLFD servPoll;
+    servPoll.fd = m_sockfd;
+    servPoll.events = POLLRDNORM;
+#else
     pollfd servPoll;
     servPoll.fd = m_sockfd;
     servPoll.events = POLLIN;
+#endif
     // Adding to list.
     m_polls.push_back(servPoll);
 
@@ -367,7 +413,12 @@ void TcpServer::handlerPoll() {
                 occurError(ret, SocketError::UnknownSocketError, "Server poll response error!");
         }
         // New Client wants connect to the server
-        if (ret > 0 && (m_polls[0].revents & POLLIN)) {
+#ifdef _WIN32
+        auto pollresult = (m_polls[0].revents & POLLRDNORM);
+#else
+        auto pollresult = (m_polls[0].revents & POLLIN);
+#endif
+        if (ret > 0 && pollresult) {
             struct sockaddr_in cliaddr;
             socklen_t clilen = sizeof(cliaddr);
 
@@ -375,9 +426,15 @@ void TcpServer::handlerPoll() {
             if (occurError(cli_sockfd, SocketError::UnknownSocketError, "Server Accepting failed!"))
                 continue;
             // If cli_sockfd is fine, must enqueue to m_pendingConnections
+#ifdef _WIN32
+            WSAPOLLFD cliPoll;
+            cliPoll.fd = cli_sockfd;
+            cliPoll.events = POLLRDNORM;
+#else
             pollfd cliPoll;
             cliPoll.fd = cli_sockfd;
             cliPoll.events = POLLIN;
+#endif
             auto* client = new TcpClient(cli_sockfd, cliPoll);
 
             m_polls.push_back(cliPoll);

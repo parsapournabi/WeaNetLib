@@ -15,11 +15,22 @@ public:
     /// Manually TcpClient creation
     explicit TcpClient();
 
+#ifdef _WIN32
     /// Uses on TcpServer accept file descriptor response.
     /// @note By using this constructure the workerThread will not create.
+    /// @note Windows constructure
+    /// @param int: sockfd-> file descriptor the response of the accept method.
+    /// @param pollfd: fds-> Poll File descriptor handler.
+    explicit TcpClient(int sockfd, WSAPOLLFD fds);
+#else
+    /// Uses on TcpServer accept file descriptor response.
+    /// @note By using this constructure the workerThread will not create.
+    /// @note Linux constructure
     /// @param int: sockfd-> file descriptor the response of the accept method.
     /// @param pollfd: fds-> Poll File descriptor handler.
     explicit TcpClient(int sockfd, struct pollfd fds);
+
+#endif
 
     /// Destructure on TcpClient class.
     /// closes sockets earase cache
@@ -184,8 +195,15 @@ private:
     /// all clients will store here.
     std::vector<TcpClient*> m_clients;
 
+#ifdef _WIN32
     /// All Poll files will store here.
+    /// @note linux
     std::vector<pollfd> m_polls;
+#else
+    /// All Poll files will store here.
+    /// @note windows
+    std::vector<WSAPOLLFD> m_polls;
+#endif
 
     /// @details getter & setter variable of maxPendingConnections()
     /// @default = 10;

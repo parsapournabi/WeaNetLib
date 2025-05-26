@@ -7,9 +7,9 @@ namespace WeaNet {
 // UDP CLIENT CLASS START
 Udp::Udp() {
 
-//#ifdef _WIN32
+#ifdef _WIN32
     WsaInitializer::ensureInitialized();
-//#endif
+#endif
 
     // threads & workers
     workerThread = new QThread();

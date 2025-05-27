@@ -42,7 +42,11 @@ Supports both unicast and broadcast modes. Like QUdpSocket, it provides asynchro
     1- chmod +x install.sh
     2- ./install.sh
     3- Or if you want to install on specific path do this: ./install.sh /your/path/WeaNet
-
+>[!note]
+> Remember to always implement this line of code at below to your project CMakeLists.txt (If you are using Windows).
+```CMakeLists
+target_compile_definitions(WeaNetExamples PRIVATE _WIN32_WINNT=0x0A00)
+```
 ## Usage
 ### TcpClient
 1- Referer to example/TcpClientExample.cpp
@@ -55,6 +59,7 @@ Supports both unicast and broadcast modes. Like QUdpSocket, it provides asynchro
 
 ## Platforms
 1- Linux
+2- Windows
 
 
 

@@ -119,11 +119,15 @@ void Udp::receiveDatagram() {
         return;
     }
     sockaddr_in cliaddr;
-    socklen_t clilen = sizeof(clilen);
 
+#ifdef _WIN32
+    int clilen = sizeof(clilen);
     int recv_bytes = ::recvfrom(m_sockfd, (char *)m_buffer.data(), bufferSize(), MSG_WAITALL, (sockaddr *)&cliaddr, &clilen);
-    qDebug() << "Data received!" << recv_bytes;
-//    occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
+#else
+    socklen_t clilen = sizeof(clilen);
+    int recv_bytes = ::recvfrom(m_sockfd, (void *)m_buffer.data(), bufferSize(), MSG_WAITALL, (sockaddr *)&cliaddr, &clilen);
+#endif
+    occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
 
     if (recv_bytes > 0) {
         void *rawptr = static_cast<void*>(m_buffer.data());

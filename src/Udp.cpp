@@ -54,28 +54,35 @@ bool Udp::bind(const char *host, int port) {
     m_servaddr.sin_port = htons(port);
     m_servlen = sizeof(m_servaddr);
 
-    // Locating local & peer address
-    locateAddresses();
-
     // Update State (attempting to bind).
         // State update var
     std::stringstream update_message;
-    update_message << "Binding socket to " << localAddress() << ':' << localPort();
+    update_message << "Binding socket...";
     updateState(SocketState::BindingState, update_message.str().c_str());
-    // clearing update state
     update_message.str("");
     update_message.clear();
+
 
     // Bind & check errors
     int b = ::bind(m_sockfd, (const struct sockaddr*)&m_servaddr, m_servlen);
     std::cout << "Bind result: " << b << " Socket FD: " << m_sockfd << std::endl;
     if (occurError(b, SocketError::SocketBindError, "Socket binding failed!"))
         return false;
+    else {
+        // Locating local & peer address
+        locateAddresses();
+
+        // Update State (Server bound).
+        update_message << "Socket bound to interface" << localAddress() << ':' << localPort() << " successfully. ";
+        updateState(SocketState::BindingState, update_message.str().c_str());
+        // clearing update state
+        update_message.str("");
+        update_message.clear();
+
+    }
     // Socket bound.
     m_isBind = true;
 
-    // Update State (Server bound).
-    updateState(SocketState::BoundState, "Socket bound to interface successfully.");
 
     // Poll Config
     m_fds.fd = m_sockfd;

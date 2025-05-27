@@ -93,25 +93,27 @@ bool TcpClient::connectToHost(const char* host, int port) {
     m_servaddr.sin_port = htons(port);
     m_servlen = sizeof(m_servaddr);
 
-    // Locating local & peer address
-    locateAddresses();
-
-    // Update state (Server found)
-        // Status message var
-    std::stringstream update_message;
-    update_message << "Found server at " << peerAddress() << ':' << peerPort();
-    updateState(SocketState::ConnectingState, update_message.str().c_str());
-    // Clearing update_message
-    update_message.str("");
-    update_message.clear();
-
     // Update state (Attempting connection)
     updateState(SocketState::ConnectingState, "Attempting secure connection...");
 
     // Trying to connect
     int c = ::connect(m_sockfd, (const struct sockaddr*)&m_servaddr, m_servlen);
     // Check connection response...
-    occurError(c, SocketError::ConnectionRefusedError, "Connectoin failed! Host unreachable.");
+    if (!occurError(c, SocketError::ConnectionRefusedError, "Connectoin failed! Host unreachable.")) {
+        // Locating local & peer address
+        locateAddresses();
+
+        // Update state (Server found)
+            // Status message var
+        std::stringstream update_message;
+        update_message << "Found server at " << peerAddress() << ':' << peerPort();
+        updateState(SocketState::ConnectingState, update_message.str().c_str());
+        // Clearing update_message
+        update_message.str("");
+        update_message.clear();
+
+    }
+
 
     // Assign true if response is not -1 else false
     m_isConnected = c < 0 ? false : true;

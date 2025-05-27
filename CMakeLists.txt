@@ -36,7 +36,7 @@ set(SOURCES
 )
 add_library(WeaNet
     SHARED ${SOURCES} ${HEADERS}
-    install.sh install.ps1 README.md uninstall.sh uninstall.ps1 WeaNetConfig.cmake.in WeaNetUninstall.cmake.in
+    install.sh README.md uninstall.sh WeaNetConfig.cmake.in WeaNetUninstall.cmake.in
 )
 
 target_include_directories(WeaNet

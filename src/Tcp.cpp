@@ -158,11 +158,11 @@ void TcpClient::read() {
         return;
     }
 #ifdef _WIN32
-    int recv_bytes = ::recv(m_sockfd, (char *)m_buffer.data(), bufferSize(), 0);
+    int recv_bytes = ::recv(m_sockfd, (char *)m_buffer.data(), bufferSize(), MSG_WAITALL);
 #else
-    int recv_bytes = ::recv(m_sockfd, (void *)m_buffer.data(), bufferSize(), 0);
+    int recv_bytes = ::recv(m_sockfd, (void *)m_buffer.data(), bufferSize(), MSG_WAITALL);
 #endif
-//    occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
+    occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
 
     // Data received
     if (recv_bytes > 0) {

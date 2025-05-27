@@ -39,10 +39,15 @@ Supports both unicast and broadcast modes. Like QUdpSocket, it provides asynchro
         2- C++ 17 POSIX
 
 ### Library Installation
+#### Linux
     1- chmod +x install.sh
     2- ./install.sh
     3- Or if you want to install on specific path do this: ./install.sh /your/path/WeaNet
->[!note]
+#### Windows
+    1- 
+    2-
+    3- 
+>[!WARNING]
 > Remember to always implement this line of code at below to your project CMakeLists.txt (If you are using Windows).
 ```CMakeLists
 target_compile_definitions(WeaNetExamples PRIVATE _WIN32_WINNT=0x0A00)

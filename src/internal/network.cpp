@@ -237,7 +237,11 @@ void Network::setPeerPort(int port_num) { m_peerPort = port_num; }
 void Network::locateAddresses() {
     // Configuring address
     struct sockaddr_in addr;
+#ifdef _WIN32
+    int addrlen = sizeof(addr);
+#else
     socklen_t addrlen = sizeof(addr);
+#endif
     int gsn = getsockname(m_sockfd, (sockaddr*)&addr, &addrlen);
 
     // Raise exception if we have an error while getsockname().

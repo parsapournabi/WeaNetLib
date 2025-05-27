@@ -31,6 +31,7 @@ Supports both unicast and broadcast modes. Like QUdpSocket, it provides asynchro
         - [TcpClient](#tcpclient)
         - [TcpServer](#tcpserver)
         - [Udp](#udp)
+        - [CMake Usage] (#cmake-usage)
 3. [Platforms](#platforms)
 
 ## Installation
@@ -44,14 +45,9 @@ Supports both unicast and broadcast modes. Like QUdpSocket, it provides asynchro
     2- ./install.sh
     3- Or if you want to install on specific path do this: ./install.sh /your/path/WeaNet
 #### Windows
-    1- 
-    2-
-    3- 
->[!WARNING]
-> Remember to always implement this line of code at below to your project CMakeLists.txt (If you are using Windows).
-```CMakeLists
-target_compile_definitions(WeaNetExamples PRIVATE _WIN32_WINNT=0x0A00)
-```
+    1- Build the Project.
+    2- cd /to/build/path/
+    3- cmake --install .
 ## Usage
 ### TcpClient
 1- Referer to example/TcpClientExample.cpp
@@ -61,6 +57,26 @@ target_compile_definitions(WeaNetExamples PRIVATE _WIN32_WINNT=0x0A00)
 
 ### Udp
 1- Referer to example/UdpExample.cpp
+
+### CMake Usage
+- You must include these lines to you Project CMakeLists.txt:
+```CMakeLists
+find_package(WeaNet REQUIRED)
+# or you can Do by custom Prefix if the package isn't install to "/usr/local/WeaNet" or "C:\Program Files (x86)\WeaNet"
+find_package(WeaNet REQUIRED PATHS "/to/your/installed/path/")
+
+target_link_libraries(yourProjectName PRIVATE WeaNet::WeaNet)
+
+# ONLY REQUIRED on Windows
+if (_WIN32)
+        target_compile_definitions(WeaNetExamples PRIVATE _WIN32_WINNT=0x0A00)
+endif()
+```
+>[!WARNING]
+> Remember to always implement this line of code at below to your project CMakeLists.txt (If you are using Windows).
+```CMakeLists
+target_compile_definitions(WeaNetExamples PRIVATE _WIN32_WINNT=0x0A00)
+```
 
 ## Platforms
 1- Linux

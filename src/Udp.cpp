@@ -7,6 +7,10 @@ namespace WeaNet {
 // UDP CLIENT CLASS START
 Udp::Udp() {
 
+#ifdef _WIN32
+    WsaInitializer::ensureInitialized();
+#endif
+
     // threads & workers
     workerThread = new QThread();
     this->moveToThread(workerThread);
@@ -50,32 +54,43 @@ bool Udp::bind(const char *host, int port) {
     m_servaddr.sin_port = htons(port);
     m_servlen = sizeof(m_servaddr);
 
-    // Locating local & peer address
-    locateAddresses();
-
     // Update State (attempting to bind).
         // State update var
     std::stringstream update_message;
-    update_message << "Binding socket to " << localAddress() << ':' << localPort();
+    update_message << "Binding socket...";
     updateState(SocketState::BindingState, update_message.str().c_str());
-    // clearing update state
     update_message.str("");
     update_message.clear();
+
 
     // Bind & check errors
     int b = ::bind(m_sockfd, (const struct sockaddr*)&m_servaddr, m_servlen);
     std::cout << "Bind result: " << b << " Socket FD: " << m_sockfd << std::endl;
     if (occurError(b, SocketError::SocketBindError, "Socket binding failed!"))
         return false;
+    else {
+        // Locating local & peer address
+        locateAddresses();
+
+        // Update State (Server bound).
+        update_message << "Socket bound to interface" << localAddress() << ':' << localPort() << " successfully. ";
+        updateState(SocketState::BindingState, update_message.str().c_str());
+        // clearing update state
+        update_message.str("");
+        update_message.clear();
+
+    }
     // Socket bound.
     m_isBind = true;
 
-    // Update State (Server bound).
-    updateState(SocketState::BoundState, "Socket bound to interface successfully.");
 
     // Poll Config
     m_fds.fd = m_sockfd;
+#ifdef _WIN32
+    m_fds.events = POLLRDNORM;
+#else
     m_fds.events = POLLIN;
+#endif
 
     // Definition
     m_peek = 0;
@@ -104,9 +119,14 @@ void Udp::receiveDatagram() {
         return;
     }
     sockaddr_in cliaddr;
-    socklen_t clilen = sizeof(clilen);
 
+#ifdef _WIN32
+    int clilen = sizeof(clilen);
     int recv_bytes = ::recvfrom(m_sockfd, (char *)m_buffer.data(), bufferSize(), MSG_WAITALL, (sockaddr *)&cliaddr, &clilen);
+#else
+    socklen_t clilen = sizeof(clilen);
+    int recv_bytes = ::recvfrom(m_sockfd, (void *)m_buffer.data(), bufferSize(), MSG_WAITALL, (sockaddr *)&cliaddr, &clilen);
+#endif
     occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
 
     if (recv_bytes > 0) {
@@ -126,7 +146,11 @@ int Udp::writeDatagram(void *buffer, int flags) {
         return -1;
     }
 
+#ifdef _WIN32
+    int s = ::sendto(m_sockfd, (char *)buffer, bufferSize(), 0, (sockaddr *)&m_recvaddr, m_recvlen);
+#else
     int s = ::sendto(m_sockfd, buffer, bufferSize(), MSG_CONFIRM, (sockaddr *)&m_recvaddr, m_recvlen);
+#endif
     if(!occurError(s, SocketError::SocketTimeoutError, "No bytes sent!", 1))
         emit bytesWritten(s);
     return s;
@@ -144,7 +168,11 @@ int Udp::writeDatagram(void *buffer, const char *host, int port, int flags) {
     addr.sin_addr.s_addr = inet_addr(host);
 
 
+#ifdef _WIN32
+    int s = ::sendto(m_sockfd, (char *)buffer, bufferSize(), 0, (sockaddr *)&addr, addrlen);
+#else
     int s = ::sendto(m_sockfd, buffer, bufferSize(), MSG_CONFIRM, (sockaddr *)&addr, addrlen);
+#endif
     if(!occurError(s, SocketError::SocketTimeoutError, "No bytes sent!", 1))
         emit bytesWritten(s);
     return s;
@@ -190,6 +218,15 @@ void Udp::handlerRead() {
         // Poll timeout
         int timeout_ms = 100;
         // Poll workflow
+#ifdef _WIN32
+        int ret_fd = WSAPoll(&m_fds, 1, timeout_ms);
+        if (ret_fd > 0 && (m_fds.revents & POLLRDNORM)) {
+            if (m_peek <= 0) {
+                m_peek++;
+                emit readyRead();
+            }
+        }
+#else
         int ret_fd = poll(&m_fds, 1, timeout_ms);
         if (ret_fd > 0 && (m_fds.revents & POLLIN)) {
             if (m_peek <= 0) {
@@ -197,6 +234,7 @@ void Udp::handlerRead() {
                 emit readyRead();
             }
         }
+#endif
     }
 
 }

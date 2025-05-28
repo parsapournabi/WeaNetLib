@@ -113,8 +113,12 @@ private:
     /// isHighThroughputMode property
     bool m_highThroughputMode = false;
 
+#ifdef _WIN32
+    WSAPOLLFD m_fds;
+#else
     /// Needs on handlerPoll
     struct pollfd m_fds;
+#endif
 
 };
 }

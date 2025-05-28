@@ -6,6 +6,9 @@ using Clock = std::chrono::high_resolution_clock;
 namespace WeaNet {
 // TCP CLIENT CLASS START
 TcpClient::TcpClient() {
+#ifdef _WIN32
+    WsaInitializer::ensureInitialized();
+#endif
 
     // definition
     this->m_buffer.resize(m_bufferSize);
@@ -27,6 +30,28 @@ TcpClient::TcpClient() {
     workerThread->start();
 }
 
+#ifdef _WIN32
+TcpClient::TcpClient(int sockfd, WSAPOLLFD fds) {
+
+    // definition
+    this->m_buffer.resize(m_bufferSize);
+    this->m_socketType = SocketType::Client;
+
+    this->m_pollLoop = false;
+    this->m_isConnected = true;
+
+    // workflow
+    m_sockfd = sockfd;
+    m_fds = fds;
+
+    // SetOptions
+    setSocketOptions();
+
+    // Monitor
+
+}
+#else
+
 TcpClient::TcpClient(int sockfd, struct pollfd fds) {
 
     // definition
@@ -46,6 +71,7 @@ TcpClient::TcpClient(int sockfd, struct pollfd fds) {
     // Monitor
 
 }
+#endif
 
 TcpClient::~TcpClient() {
     TcpClient::close();
@@ -67,25 +93,27 @@ bool TcpClient::connectToHost(const char* host, int port) {
     m_servaddr.sin_port = htons(port);
     m_servlen = sizeof(m_servaddr);
 
-    // Locating local & peer address
-    locateAddresses();
-
-    // Update state (Server found)
-        // Status message var
-    std::stringstream update_message;
-    update_message << "Found server at " << peerAddress() << ':' << peerPort();
-    updateState(SocketState::ConnectingState, update_message.str().c_str());
-    // Clearing update_message
-    update_message.str("");
-    update_message.clear();
-
     // Update state (Attempting connection)
     updateState(SocketState::ConnectingState, "Attempting secure connection...");
 
     // Trying to connect
     int c = ::connect(m_sockfd, (const struct sockaddr*)&m_servaddr, m_servlen);
     // Check connection response...
-    occurError(c, SocketError::ConnectionRefusedError, "Connectoin failed! Host unreachable.");
+    if (!occurError(c, SocketError::ConnectionRefusedError, "Connectoin failed! Host unreachable.")) {
+        // Locating local & peer address
+        locateAddresses();
+
+        // Update state (Server found)
+            // Status message var
+        std::stringstream update_message;
+        update_message << "Found server at " << peerAddress() << ':' << peerPort();
+        updateState(SocketState::ConnectingState, update_message.str().c_str());
+        // Clearing update_message
+        update_message.str("");
+        update_message.clear();
+
+    }
+
 
     // Assign true if response is not -1 else false
     m_isConnected = c < 0 ? false : true;
@@ -100,7 +128,11 @@ bool TcpClient::connectToHost(const char* host, int port) {
 
         // Poll Config
         m_fds.fd = m_sockfd;
+#ifdef _WIN32
+        m_fds.events = POLLRDNORM;
+#else
         m_fds.events = POLLIN;
+#endif
     }
     else
         // Updating status
@@ -125,7 +157,11 @@ void TcpClient::read() {
         occurError(-1, SocketError::UnsupportedSocketOperationError, "Socket isn't connect!");
         return;
     }
-    int recv_bytes = ::recv(m_sockfd, (void *)m_buffer.data(), bufferSize(), 0);
+#ifdef _WIN32
+    int recv_bytes = ::recv(m_sockfd, (char *)m_buffer.data(), bufferSize(), MSG_WAITALL);
+#else
+    int recv_bytes = ::recv(m_sockfd, (void *)m_buffer.data(), bufferSize(), MSG_WAITALL);
+#endif
     occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
 
     // Data received
@@ -157,7 +193,11 @@ int TcpClient::write(void *buffer, int flags) {
         return -1;
     }
 
+#ifdef _WIN32
+    int s = ::send(m_sockfd, (char *)buffer, bufferSize(), flags);
+#else
     int s = ::send(m_sockfd, buffer, bufferSize(), flags);
+#endif
     if(!occurError(s, SocketError::SocketTimeoutError, "No bytes sent!", 1))
         emit bytesWritten(s);
     return s;
@@ -203,7 +243,16 @@ void TcpClient::handlerRead() {
     }
     else {
         // Poll timeout
-        int timeout_ms = 100;
+        int timeout_ms = 200;
+#ifdef _WIN32
+        int ret_fd = WSAPoll(&m_fds, 1, timeout_ms);
+        if (ret_fd > 0 && (m_fds.revents & POLLRDNORM)) {
+            if (m_peek <= 0) {
+                m_peek++;
+                emit readyRead();
+            }
+        }
+#else
         int ret_fd = poll(&m_fds, 1, timeout_ms);
         if (ret_fd > 0 && (m_fds.revents & POLLIN)) {
             if (m_peek <= 0) {
@@ -211,12 +260,17 @@ void TcpClient::handlerRead() {
                 emit readyRead();
             }
         }
+#endif
     }
 }
 // TCP CLIENT CLASS END
 
 // TCP SERVER CLASS START
 TcpServer::TcpServer() {
+
+#ifdef _WIN32
+    WsaInitializer::ensureInitialized();
+#endif
 
     // definition
     this->m_socketType = SocketType::Server;
@@ -288,9 +342,15 @@ bool TcpServer::listen(const char *host, int port) {
         return false;
 
     // Poll Cofigurations
+#ifdef _WIN32
+    WSAPOLLFD servPoll;
+    servPoll.fd = m_sockfd;
+    servPoll.events = POLLRDNORM;
+#else
     pollfd servPoll;
     servPoll.fd = m_sockfd;
     servPoll.events = POLLIN;
+#endif
     // Adding to list.
     m_polls.push_back(servPoll);
 
@@ -343,7 +403,11 @@ void TcpServer::handlerPoll() {
             QThread::msleep(250);
             continue;
         }
+#ifdef _WIN32
+        int ret = WSAPoll(m_polls.data(), m_polls.size(), TIMEOUT);
+#else
         int ret = poll(m_polls.data(), m_polls.size(), TIMEOUT);
+#endif
         // Error handling
         if (ret < 0) {
             auto diff = std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now() - st).count();
@@ -351,7 +415,12 @@ void TcpServer::handlerPoll() {
                 occurError(ret, SocketError::UnknownSocketError, "Server poll response error!");
         }
         // New Client wants connect to the server
-        if (ret > 0 && (m_polls[0].revents & POLLIN)) {
+#ifdef _WIN32
+        auto pollresult = (m_polls[0].revents & POLLRDNORM);
+#else
+        auto pollresult = (m_polls[0].revents & POLLIN);
+#endif
+        if (ret > 0 && pollresult) {
             struct sockaddr_in cliaddr;
             socklen_t clilen = sizeof(cliaddr);
 
@@ -359,9 +428,15 @@ void TcpServer::handlerPoll() {
             if (occurError(cli_sockfd, SocketError::UnknownSocketError, "Server Accepting failed!"))
                 continue;
             // If cli_sockfd is fine, must enqueue to m_pendingConnections
+#ifdef _WIN32
+            WSAPOLLFD cliPoll;
+            cliPoll.fd = cli_sockfd;
+            cliPoll.events = POLLRDNORM;
+#else
             pollfd cliPoll;
             cliPoll.fd = cli_sockfd;
             cliPoll.events = POLLIN;
+#endif
             auto* client = new TcpClient(cli_sockfd, cliPoll);
 
             m_polls.push_back(cliPoll);

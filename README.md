@@ -21,6 +21,49 @@ Supports both unicast and broadcast modes. Like QUdpSocket, it provides asynchro
 - Design with CPU efficiency and thread-safety in mind
 - Easy to integrate into non-Qt systems or embedded environments
 
+## File Tree
+```bash
+project_rooot
+├── CMakeLists.txt
+├── examples
+│   ├── CMakeLists.txt
+│   ├── main.cpp
+│   ├── TcpClientExample.cpp
+│   ├── TcpServerExample.cpp
+│   └── UdpExample.cpp
+├── include
+│   └── WeaNet
+│       ├── Internal
+│       │   ├── common.h
+│       │   ├── enumPackets.h
+│       │   ├── error.h
+│       │   ├── logdatatype.cpp
+│       │   ├── logdatatype.h
+│       │   ├── net_enums.h
+│       │   ├── network.h
+│       │   ├── parserfile.cpp
+│       │   ├── parserfile.h
+│       │   └── WsaInitializer.h
+│       ├── Manager.cpp
+│       ├── Manager.h
+│       ├── Tcp.h
+│       └── Udp.h
+├── install.sh
+├── README.md
+├── src
+│   ├── internal
+│   │   ├── error.cpp
+│   │   └── network.cpp
+│   ├── Tcp.cpp
+│   └── Udp.cpp
+├── tree.txt
+├── uninstall.sh
+├── WeaNetConfig.cmake.in
+└── WeaNetUninstall.cmake.in
+
+```
+
+---
 
 ## Contents
 

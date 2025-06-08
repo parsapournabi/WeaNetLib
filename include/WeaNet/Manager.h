@@ -9,6 +9,7 @@
 #include "WeaNet/Udp.h"
 #include "WeaNet/Internal/net_enums.h"
 #include "WeaNet/Internal/enumPackets.h"
+#include "WeaNet/Internal/logdatatype.h"
 
 using namespace WeaNet;
 namespace WeaNet {
@@ -37,14 +38,6 @@ public:
     void setPauseSending(bool pause);
     bool pauseSending() const;
 
-    double azimuth() const;
-    double elevation() const;
-    double range() const;
-    double time() const;
-    double power() const;
-    QByteArray rawData() const;
-
-
 
 signals:
     void signalData(QByteArray *);
@@ -53,7 +46,7 @@ signals:
     /// @details Speed MB/s
     void signalSendSpeed(double speed);
 
-    void readyRead();
+    void readyRead(LogDataType *);
 
 public slots:
 
@@ -107,11 +100,9 @@ private:
 public:
     // Public variables
 
-    TcpClient *client = new TcpClient();
+    TcpClient *client = new TcpClient();public:
     TcpServer *server = new TcpServer();
     Udp *udp = new Udp();
-
-    LogPacket recvPackets;
 
 private:
     QThread *workerThread = nullptr;

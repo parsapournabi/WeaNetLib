@@ -10,6 +10,7 @@
 #include "Manager.h"
 #include "WeaNet/Internal/parserfile.h"
 
+//#define USE_UNION
 
 namespace WeaNet {
 const int BUFFER_SIZE = 64000;
@@ -132,16 +133,6 @@ double Manager::sendSpeed() const { return TX_MB_S; }
 
 void Manager::setPauseSending(bool pause) { m_pauseSending = pause; }
 bool Manager::pauseSending() const { return m_pauseSending; }
-
-double Manager::azimuth() const { return recvPackets.azimuth; }
-double Manager::elevation() const { return recvPackets.elevation; }
-double Manager::range() const { return recvPackets.rangeCell; }
-double Manager::time() const { return recvPackets.time; }
-double Manager::power() const { return recvPackets.power; }
-QByteArray Manager::rawData() const {
-    return QByteArray(reinterpret_cast<const char*>(recvPackets.raw),
-                      sizeof(recvPackets.raw));
-}
 
 void Manager::onBind() {
     // If socketType is Tcp.
@@ -348,49 +339,45 @@ void Manager::onReadyRead() {
 void Manager::onDataReceived(void *p_buffer, size_t buf_len) {
     //    std::cout << "Data received on dataReceived()" << std::endl;
     std::string buf_str = std::to_string(buf_len);
+#ifdef USE_UNION
+    LogDataType *logDataType = new LogDataType();
+    const char *raw = static_cast<const char*>(p_buffer);
+    memcpy(logDataType->recvPackets.raw, &raw, sizeof(logDataType->recvPackets.raw));
+    emit readyRead(logDataType);
+#else
+
     const char *raw = static_cast<const char*>(p_buffer);
     QByteArray bytes(raw, buf_len);
     emit signalData(&bytes);
+#endif
 
-//    if (m_writeCsv) {
-//        std::vector<double> col;
-//        for (int i = 0; i < buf_len; i++) {
-//            col.push_back(raw[i]);
-//        }
-//        m_csvArray.push_back(col);
-//    }
     if (std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - m_rxStartTime).count() > 10e8) {
         // Speed calculating
         RX_MB_S = std::round((RX_bytes / 10e5) * 100.0) / 100.0;
         emit signalRecvSpeed(RX_MB_S);
-//        std::ostringstream rounded;
-//        rounded << std::fixed << std::setprecision(2) << RX_MB_S;
-//        std::string throughput = rounded.str() + " MB/s";
-//        std::cout << "Rx Speed (MB/s): " << RX_MB_S << " Is on Boost: " << client->isHighThroughputMode() <<  std::endl;
         RX_bytes = 0.0;
         RX_MB_S = 0.0;
         m_rxStartTime = clock::now();
-//        std::cout << "Buffer len: " << buf_len << std::endl;
-//        std::cout << "Raw size: " << sizeof(raw) << ' ' << sizeof(*raw) << std::endl;
-
     }
     else RX_bytes += buf_len;
 }
 
 void Manager::onDataReceivedUdp(void *p_buffer, size_t buf_len, const char *host, int port) {
     std::string buf_str = std::to_string(buf_len);
+#ifdef USE_UNION
+    LogDataType *logDataType = new LogDataType();
+    const char *raw = static_cast<const char*>(p_buffer);
+    memcpy(logDataType->recvPackets.raw, &raw, sizeof(logDataType->recvPackets.raw));
+    emit readyRead(logDataType);
+#else
     const char *raw = static_cast<const char*>(p_buffer);
     QByteArray bytes(raw, buf_len);
-//    QByteArray bytes = QByteArray::fromRawData(raw, buf_len);
     emit signalData(&bytes);
-
+#endif
     if (std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - m_rxStartTime).count() > 10e8) {
         RX_MB_S = std::round((RX_bytes / 10e5) * 100.0) / 100.0;
         emit signalRecvSpeed(RX_MB_S);
-//        std::ostringstream rounded;
-//        rounded << std::fixed << std::setprecision(2) << RX_MB_S;
-//        std::string throughput = rounded.str() + " MB/s";
-//        std::cout << "Rx Speed (MB/s): " << RX_MB_S << std::endl;
+
         RX_bytes = 0.0;
         RX_MB_S = 0.0;
         m_rxStartTime = clock::now();
@@ -404,8 +391,10 @@ void Manager::onParseData(QByteArray *bytes) {
 //    qDebug() << "ServoPacket Before assign";
 //    for (auto &r: recvPackets.raw)
 //        qDebug() << r;
-    memcpy(recvPackets.raw, bytes->constData(), sizeof(recvPackets.raw));
-    emit readyRead();
+    LogDataType *logDataType = new LogDataType();
+    memcpy(logDataType->recvPackets.raw, bytes->constData(), sizeof(logDataType->recvPackets.raw));
+
+    emit readyRead(logDataType);
 //    for (auto &r: recvPackets.raw)
 //        qDebug() << r;
 //    qDebug() << "Azimuth" << recvPackets.azimuth;

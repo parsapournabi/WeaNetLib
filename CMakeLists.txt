@@ -30,6 +30,7 @@ set(HEADERS
         include/WeaNet/Manager.h
         include/WeaNet/Internal/enumPackets.h
         include/WeaNet/Internal/parserfile.h
+        include/WeaNet/Internal/logdatatype.h
     )
 set(SOURCES
         src/Tcp.cpp
@@ -38,10 +39,12 @@ set(SOURCES
         src/internal/network.cpp
         include/WeaNet/Manager.cpp
         include/WeaNet/Internal/parserfile.cpp
-)
+        include/WeaNet/Internal/logdatatype.cpp
+            )
 add_library(WeaNet
     SHARED ${SOURCES} ${HEADERS}
     install.sh README.md uninstall.sh WeaNetConfig.cmake.in WeaNetUninstall.cmake.in
+
 )
 
 target_include_directories(WeaNet

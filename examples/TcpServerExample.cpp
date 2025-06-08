@@ -1,4 +1,3 @@
-#ifdef EXAMPLE_MODE
 // Importing module
 #include <WeaNet/Tcp.h>
 
@@ -169,4 +168,3 @@ private:
     std::vector<TcpClient*> m_acceptedClients; // Need this vector on your code for client handling.
 };
 
-#endif

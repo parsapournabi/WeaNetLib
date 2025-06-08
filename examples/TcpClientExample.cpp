@@ -1,4 +1,3 @@
-#ifdef EXAMPLE_MODE
 // Importing module
 #include <WeaNet/Tcp.h>
 
@@ -151,4 +150,3 @@ class MainWindow {
     }
 };
 
-#endif

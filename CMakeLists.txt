@@ -27,12 +27,17 @@ set(HEADERS
         include/WeaNet/Internal/network.h
         include/WeaNet/Internal/common.h
         include/WeaNet/Internal/WsaInitializer.h
+        include/WeaNet/Manager.h
+        include/WeaNet/Internal/enumPackets.h
+        include/WeaNet/Internal/parserfile.h
     )
 set(SOURCES
         src/Tcp.cpp
         src/Udp.cpp
         src/internal/error.cpp
         src/internal/network.cpp
+        include/WeaNet/Manager.cpp
+        include/WeaNet/Internal/parserfile.cpp
 )
 add_library(WeaNet
     SHARED ${SOURCES} ${HEADERS}

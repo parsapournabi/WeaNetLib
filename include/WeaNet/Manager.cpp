@@ -2,6 +2,7 @@
 #include <bits/stdc++.h>
 #include <QThread>
 #include <QVector>
+#include <QList>
 #include <QStandardPaths>
 #include <QDebug>
 #include <QDataStream>
@@ -11,6 +12,7 @@
 #include "WeaNet/Internal/parserfile.h"
 
 //#define USE_UNION
+#define MULTI_EMIT
 
 namespace WeaNet {
 const int BUFFER_SIZE = 64000;
@@ -289,20 +291,47 @@ void Manager::sendingCsvProcess() {
     m_csvReachedIndex = 0;
     while (!pauseSending() && m_csvReachedIndex < m_csvDataLen) {
         m_elapsedTime = std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - m_startTime).count() / 10e8;
-        LogPacket packet;
-        for (int i = 0; i < m_csvData[m_csvReachedIndex].size(); ++i)
-            packet.raw[i] = m_csvData[m_csvReachedIndex][i];
-        packet.ctime = m_elapsedTime;
-        int len = sizeof(packet.raw);
-        std::fill(buffer.begin(), buffer.end(), 0x00);
-        memcpy(buffer.data(), &packet.raw, len);
-        onSend(QByteArray(reinterpret_cast<const char*>(buffer.data()), static_cast<int>(buffer.size())));
+        QByteArray byte;
+        if (connectionType() == SocketType::UdpSocket)
+            byte.resize(BUFFER_SIZE);
+        else
+            byte.resize(TCP_BUFFER_SIZE);
+        byte.fill(0x00, byte.size());
+        QDataStream stream(&byte, QIODevice::WriteOnly);
+        stream.setByteOrder(QDataStream::LittleEndian);
+        uint8_t dataSize = 1;
+        do {
+            LogPacket packet;
+            for (int i = 0; i < m_csvData[m_csvReachedIndex].size(); ++i)
+                packet.raw[i] = m_csvData[m_csvReachedIndex][i];
+            packet.ctime = m_elapsedTime;
+
+//            uint8_t header = 0x7A;
+//            uint8_t registerNum = 0x01;
+            // dataSize
+            if (dataSize == 1)
+                stream << uint8_t(1);
+            else
+                byte[0] = dataSize;
+            stream << packet.azimuth << packet.elevation << packet.rangeCell << packet.time << packet.power << packet.ctime;
+//            int len = sizeof(packet.raw);
+//            std::fill(buffer.begin(), buffer.end(), 0x00);
+//            memcpy(buffer.data(), &packet.raw, len);
+//            onSend(QByteArray(reinterpret_cast<const char*>(buffer.data()), static_cast<int>(buffer.size())));
+            m_csvReachedIndex++;
+            dataSize++;
+            if (m_csvReachedIndex >= m_csvDataLen)
+                break;
+        }
+        while (m_csvData[m_csvReachedIndex][m_azimuthIndex] == m_csvData[m_csvReachedIndex - 1][m_azimuthIndex]);
+        onSend(byte);
+
         m_startTime = clock::now();
         if (m_csvReachedIndex < m_csvDataLen) {
             int timeIndex = m_interValIndex;
             busyWait(m_csvData[m_csvReachedIndex + 1][timeIndex] - m_csvData[m_csvReachedIndex][timeIndex]);
         }
-        m_csvReachedIndex++;
+//        m_csvReachedIndex++;
 
     }
 
@@ -386,23 +415,33 @@ void Manager::onDataReceivedUdp(void *p_buffer, size_t buf_len, const char *host
 }
 
 void Manager::onParseData(QByteArray *bytes) {
-//    qDebug() << "Bytes" << bytes->toHex();
-//    qDebug() << "ByteSize: " << bytes->count();
-//    qDebug() << "ServoPacket Before assign";
-//    for (auto &r: recvPackets.raw)
-//        qDebug() << r;
+
+    int unPacketSize = 6;
+#ifdef MULTI_EMIT
+    QSharedPointer<QList<QSharedPointer<LogDataType>>> logDatas = QSharedPointer<QList<QSharedPointer<LogDataType>>>::create();
+    QDataStream stream(bytes, QIODevice::ReadOnly);
+    stream.setByteOrder(QDataStream::LittleEndian);
+    uint8_t dataSize;
+    stream >> dataSize;
+    for (int i = 1; i < (dataSize * unPacketSize) + 1; i += unPacketSize){
+        QSharedPointer<LogDataType>logData = QSharedPointer<LogDataType>::create();
+        stream >> logData->recvPackets.azimuth;
+        stream >> logData->recvPackets.elevation;
+        stream >> logData->recvPackets.rangeCell;
+        stream >> logData->recvPackets.time;
+        stream >> logData->recvPackets.power;
+        stream >> logData->recvPackets.ctime;
+//        qDebug() << logData->recvPackets.azimuth << logData->recvPackets.elevation<< logData->recvPackets.time << logData->recvPackets.power;
+        logDatas->append(logData);
+    }
+    emit readyReads(logDatas, logDatas->constLast()->azimuth(), logDatas->constLast()->time());
+
+#else
     LogDataType *logDataType = new LogDataType();
     memcpy(logDataType->recvPackets.raw, bytes->constData(), sizeof(logDataType->recvPackets.raw));
 
     emit readyRead(logDataType);
-//    for (auto &r: recvPackets.raw)
-//        qDebug() << r;
-//    qDebug() << "Azimuth" << recvPackets.azimuth;
-//    qDebug() << "Elv" << recvPackets.elevation;
-//    qDebug() << "Range" << recvPackets.rangeCell;
-//    qDebug() << "Time" << recvPackets.time;
-//    qDebug() << "Power" << recvPackets.power;
-//    qDebug() << "ctime" << recvPackets.ctime;
+#endif
 }
 
 void Manager::onBytesWritten(int numSentBytes) {

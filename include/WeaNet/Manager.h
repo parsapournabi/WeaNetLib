@@ -48,6 +48,8 @@ signals:
 
     void readyRead(LogDataType *);
 
+    void readyReads(QSharedPointer<QList<QSharedPointer<LogDataType>>> logs, qreal az, qreal time);
+
 public slots:
 
     /// @param int: 0 == ClientTcp
@@ -135,6 +137,7 @@ private:
     TimePoint m_startTime = clock::now();
     double m_elapsedTime = 0.0;
     int m_interValIndex = 3;
+    int m_azimuthIndex = 0;
 };
 }
 

@@ -87,7 +87,7 @@ public:
 
     /// @details Socket setsockopt (setOption). SO_RCVTIMEO
     /// @param int: sec -> timeout value (seconds).
-    void setReadTimeout(int sec = 30);
+    void setReadTimeout(int sec = 10);
 
     /// @details Socket getsockopt(socketOption). SO_SNDTIMEO.
     /// @return int: timeout value (units = seconds).
@@ -95,7 +95,7 @@ public:
 
     /// @details Socket setsockopt (setOption). SO_SNDTIMEO
     /// @param int: sec -> timeout value (seconds).
-    void setWriteTimeout(int sec = 30);
+    void setWriteTimeout(int sec = 10);
 
     /// @return SocketError: referer enum_sock.h SocketError enum.
     /// In @class usage: the private getter variable is latest_error_.

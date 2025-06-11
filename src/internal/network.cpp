@@ -161,11 +161,11 @@ bool Network::isValidIPv4Address(const char *host) const {
 
 int Network::readTimeout() const { return m_rcvTimeout; }
 
-void Network::setReadTimeout(int sec) { m_rcvTimeout = sec; }
+void Network::setReadTimeout(int sec) { m_rcvTimeout = sec < 0 ? 0 : sec; }
 
 int Network::writeTimeout() const { return m_sndTimeout; }
 
-void Network::setWriteTimeout(int sec) { m_sndTimeout = sec; }
+void Network::setWriteTimeout(int sec) { m_sndTimeout = sec < 0 ? 0 : sec; }
 
 SocketError Network::latestError() const { return m_latestError; }
 

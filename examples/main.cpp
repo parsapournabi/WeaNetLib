@@ -10,20 +10,27 @@ int main() {
     QThread* threadRecv = new QThread();
     Manager* receiver = new Manager();
     receiver->moveToThread(threadRecv);
-    receiver->setConnectionType(2);
+    receiver->setConnectionType(SocketType::Client);
     receiver->setConnectionSetting(54321, 12345, "127.0.0.1");
-    receiver->onBind();
-    receiver->onConnect();
+    // Client options
+    receiver->client->setConnectionTimeout(1, 10);
+    receiver->client->setReadTimeout(1);
+    receiver->client->setMaxReadRetries(10);
+    receiver->client->setAutoReconnect(true);
+//    receiver->onBind(); /** Only on UDP & Server **/
+    receiver->onConnect(); /** Only on UDP & Client**/
 
-    QObject::connect(receiver, &Manager::readyRead, receiver, [=] () {
-            qDebug() << "Azimuth" << receiver->azimuth();
-            qDebug() << "Elv" << receiver->elevation();
-            qDebug() << "Range" << receiver->range();
+    QObject::connect(receiver, &Manager::readyReads, receiver, [=] (QSharedPointer<QList<QSharedPointer<LogDataType>>> logDatas,
+                                                      qreal az,
+                                                      qreal time) {
+            qDebug() << "Azimuth" << logDatas->constFirst()->azimuth();
+            qDebug() << "Elv" << logDatas->constFirst()->elevation();
+            qDebug() << "Range" << logDatas->constFirst()->range();
             //    qDebug() << "Time" <<
-            qDebug() << "Power" << receiver->power();
+            qDebug() << "Power" << logDatas->constFirst()->power();
             //    qDebug() << "ctime" << recvPackets.ctime;
 
-            QByteArray byte = receiver->rawData();
+            QByteArray byte = logDatas->constFirst()->rawData();
             qDebug() << "RawData: " << byte.toHex();
             QDataStream ds(&byte,QIODevice::ReadOnly);
             ds.setByteOrder(QDataStream::LittleEndian);

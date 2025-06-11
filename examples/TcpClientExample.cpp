@@ -23,9 +23,18 @@ class MainWindow {
 
         /** TcpClient class options & Properties **/
         client->setAutoRead(true); // setAutoRead(false) if you connected readyRead signal.
+        client->connectToHost("127.0.0.1", 12345); // Hover on function for hints.
+        client->reconnectToHost(); // Hover on function for hints.
         client->isConnected(); // Hover on function for hints.
         client->isHighThroughputMode(); // Hover on function for hints.
         client->setHighThroughputMode(true); // Hover on function for hints.
+        client->setConnectionTimeout(10, 5); // Hover on function for hints.
+        client->connectionTimeout(); // Hover on function for hints.
+        client->setMaxReadRetries(12); // Hover on function for hints.
+        client->maxReadRetries(); // Hover on function for hints.
+        client->setAutoReconnect(true); // Hover on function for hints.
+        client->autoReconnect(); // Hover on function for hints.
+
         /** Base options **/
         client->setBufferSize(1040); // Always set BufferSize for better & fast communication.
         client->setDebugMode(true); // If you setDebugMode(true) the traceback & loggers will print.

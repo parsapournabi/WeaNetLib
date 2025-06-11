@@ -266,10 +266,10 @@ protected:
     int m_bufferSize = 1024;
 
     /// Getter & Setter setReadTimeout property
-    int m_rcvTimeout = 30;
+    int m_rcvTimeout = 10;
 
     /// Getter & Setter setWriteTimeout property
-    int m_sndTimeout = 30;
+    int m_sndTimeout = 10;
 
     /// All data receive will store on this variable.
     std::vector<uint8_t> m_buffer;

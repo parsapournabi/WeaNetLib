@@ -20,12 +20,16 @@ MainClass::MainClass(QObject *parent)
     m_receiver->setConnectionType(SocketType::Client);
     m_receiver->setConnectionSetting(12345, 12345, "172.16.50.50");
 //    m_receiver->client->setReadTimeout(10);
-    m_receiver->client->setConnectionTimeout(1, -1);
+    m_receiver->client->setConnectionTimeout(1, 10);
+    QObject::connect(m_receiver->client, &TcpClient::connected, this, [=]() {qDebug() << "CLIENT CONNECTED"; });
+    QObject::connect(m_receiver->client, &TcpClient::disconnected, this, [=]() {qDebug() << "CLIENT DISCONNECTED"; });
     QObject::connect(m_receiver, &Manager::readyReads, this, [=] (QSharedPointer<QList<QSharedPointer<LogDataType>>> logs,
                                                                  qreal az,
                                                                  qreal time) {
         qDebug() << logs->size() << az << time;
     });
+
+    m_receiver->client->setBlockingMode(true);
 
     //    m_receiver->onBind();
     m_receiver->onConnect();

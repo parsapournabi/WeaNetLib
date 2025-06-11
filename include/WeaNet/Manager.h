@@ -75,7 +75,8 @@ public slots:
 
     void onSend(QByteArray bytes);
 
-    void onSendLog(QString csv_path, int interval_index = 3);
+    /// @details: repeats == -1 means infinity untill pauseSet()
+    void onSendLog(QString csv_path, int repeats = 1, int interval_index = 3);
 
     void sendingCsvProcess();
 
@@ -134,6 +135,8 @@ private:
     bool m_writeCsv = false;
     bool m_pauseSending = false;
     long m_csvReachedIndex = 0;
+    int m_repeatValue = 1;
+    int m_currentRepeater = 0;
     TimePoint m_startTime = clock::now();
     double m_elapsedTime = 0.0;
     int m_interValIndex = 3;

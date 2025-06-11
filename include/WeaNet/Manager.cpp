@@ -25,7 +25,6 @@ Manager::Manager(QObject *parent)
 {
     qputenv("QT_ASSUME_STDERR_HAS_CONSOLE", "1");
     qDebug() << "Initialized!";
-
     // events & signal connection
 //    QObject::connect(ui->rbTcpServer, &QRadioButton::clicked, this, &Manager::onSocketType);
 //    QObject::connect(ui->rbTcpClient, &QRadioButton::clicked, this, &Manager::onSocketType);
@@ -261,7 +260,7 @@ void Manager::onSend(QByteArray bytes) {
 
 }
 
-void Manager::onSendLog(QString csv_path, int interval_index) {
+void Manager::onSendLog(QString csv_path, int repeat, int interval_index) {
     if (workerThread->isRunning()) {
         qWarning() << "Warning" << "SendLog process is already running!";
         return;
@@ -271,6 +270,7 @@ void Manager::onSendLog(QString csv_path, int interval_index) {
     m_csvData = ParserFile::loadSlowData(m_readCsvPath);
     m_csvDataLen = m_csvData.size();
     m_interValIndex = interval_index;
+    m_repeatValue = repeat < 0 ? std::numeric_limits<int>::max() : repeat;
     if (m_readCsvPath.isEmpty()) {
         qCritical() << "Error" << "Please upload yor smaple.csv file.";
         return;
@@ -286,53 +286,57 @@ void Manager::onSendLog(QString csv_path, int interval_index) {
 }
 
 void Manager::sendingCsvProcess() {
-    m_startTime = clock::now();
-    m_elapsedTime = 0.0;
-    m_csvReachedIndex = 0;
-    while (!pauseSending() && m_csvReachedIndex < m_csvDataLen) {
-        m_elapsedTime = std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - m_startTime).count() / 10e8;
-        QByteArray byte;
-        if (connectionType() == SocketType::UdpSocket)
-            byte.resize(BUFFER_SIZE);
-        else
-            byte.resize(TCP_BUFFER_SIZE);
-        byte.fill(0x00, byte.size());
-        QDataStream stream(&byte, QIODevice::WriteOnly);
-        stream.setByteOrder(QDataStream::LittleEndian);
-        uint8_t dataSize = 1;
-        do {
-            LogPacket packet;
-            for (int i = 0; i < m_csvData[m_csvReachedIndex].size(); ++i)
-                packet.raw[i] = m_csvData[m_csvReachedIndex][i];
-            packet.ctime = m_elapsedTime;
-
-//            uint8_t header = 0x7A;
-//            uint8_t registerNum = 0x01;
-            // dataSize
-            if (dataSize == 1)
-                stream << uint8_t(1);
-            else
-                byte[0] = dataSize;
-            stream << packet.azimuth << packet.elevation << packet.rangeCell << packet.time << packet.power << packet.ctime;
-//            int len = sizeof(packet.raw);
-//            std::fill(buffer.begin(), buffer.end(), 0x00);
-//            memcpy(buffer.data(), &packet.raw, len);
-//            onSend(QByteArray(reinterpret_cast<const char*>(buffer.data()), static_cast<int>(buffer.size())));
-            m_csvReachedIndex++;
-            dataSize++;
-            if (m_csvReachedIndex >= m_csvDataLen)
-                break;
-        }
-        while (m_csvData[m_csvReachedIndex][m_azimuthIndex] == m_csvData[m_csvReachedIndex - 1][m_azimuthIndex]);
-        onSend(byte);
-
+    qDebug() << "CSV: " << m_csvDataLen;
+    while (m_currentRepeater < m_repeatValue && !pauseSending()) {
         m_startTime = clock::now();
-        if (m_csvReachedIndex < m_csvDataLen) {
-            int timeIndex = m_interValIndex;
-            busyWait(m_csvData[m_csvReachedIndex + 1][timeIndex] - m_csvData[m_csvReachedIndex][timeIndex]);
-        }
-//        m_csvReachedIndex++;
+        m_elapsedTime = 0.0;
+        m_csvReachedIndex = 0;
+        while (!pauseSending() && m_csvReachedIndex < m_csvDataLen) {
+            m_elapsedTime = std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - m_startTime).count() / 10e8;
+            QByteArray byte;
+            if (connectionType() == SocketType::UdpSocket)
+                byte.resize(BUFFER_SIZE);
+            else
+                byte.resize(TCP_BUFFER_SIZE);
+            byte.fill(0x00, byte.size());
+            QDataStream stream(&byte, QIODevice::WriteOnly);
+            stream.setByteOrder(QDataStream::LittleEndian);
+            uint8_t dataSize = 1;
+            do {
+                LogPacket packet;
+                for (int i = 0; i < m_csvData[m_csvReachedIndex].size(); ++i)
+                    packet.raw[i] = m_csvData[m_csvReachedIndex][i];
+                packet.ctime = m_elapsedTime;
 
+    //            uint8_t header = 0x7A;
+    //            uint8_t registerNum = 0x01;
+                // dataSize
+                if (dataSize == 1)
+                    stream << uint8_t(1);
+                else
+                    byte[0] = dataSize;
+                stream << packet.azimuth << packet.elevation << packet.rangeCell << packet.time << packet.power << packet.ctime;
+    //            int len = sizeof(packet.raw);
+    //            std::fill(buffer.begin(), buffer.end(), 0x00);
+    //            memcpy(buffer.data(), &packet.raw, len);
+    //            onSend(QByteArray(reinterpret_cast<const char*>(buffer.data()), static_cast<int>(buffer.size())));
+                m_csvReachedIndex++;
+                dataSize++;
+                if (m_csvReachedIndex >= m_csvDataLen)
+                    break;
+            }
+            while (m_csvData[m_csvReachedIndex][m_azimuthIndex] == m_csvData[m_csvReachedIndex - 1][m_azimuthIndex]);
+            onSend(byte);
+
+            m_startTime = clock::now();
+            if (m_csvReachedIndex < m_csvDataLen) {
+                int timeIndex = m_interValIndex;
+                busyWait(m_csvData[m_csvReachedIndex + 1][timeIndex] - m_csvData[m_csvReachedIndex][timeIndex]);
+            }
+    //        m_csvReachedIndex++;
+
+        }
+        m_currentRepeater++;
     }
 
 }

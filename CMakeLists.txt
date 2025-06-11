@@ -46,10 +46,10 @@ add_library(WeaNet
     install.sh README.md uninstall.sh WeaNetConfig.cmake.in WeaNetUninstall.cmake.in
 
 )
-
+set(WEANET_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(WeaNet
         PUBLIC
-                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                $<BUILD_INTERFACE:${WEANET_INCLUDE_PATH}>
                 $<INSTALL_INTERFACE:include>
 )
 
@@ -139,9 +139,14 @@ endif()
 install(DIRECTORY include/WeaNet DESTINATION include)
 
 option(BUILD_EXAMPLES "Build example application for WeaNet" ON)
+option(BUILD_TESTS "Build tests application for WeaNet" ON)
 
 if(BUILD_EXAMPLES)
-        add_subdirectory(examples EXCLUDE_FROM_ALL)
+    add_subdirectory(examples EXCLUDE_FROM_ALL)
 
 endif()
 
+if (BUILD_TESTS)
+    add_subdirectory(tests)
+
+endif()

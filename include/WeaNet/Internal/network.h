@@ -266,7 +266,7 @@ protected:
     int m_bufferSize = 1024;
 
     /// Getter & Setter setReadTimeout property
-    int m_rcvTimeout = 10;
+    int m_rcvTimeout = 2;
 
     /// Getter & Setter setWriteTimeout property
     int m_sndTimeout = 10;

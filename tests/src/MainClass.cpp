@@ -17,22 +17,24 @@ MainClass::MainClass(QObject *parent)
 
     m_receiver = new Manager();
     m_receiver->moveToThread(&threadRecv);
-    m_receiver->setConnectionType(SocketType::Client);
-    m_receiver->setConnectionSetting(12345, 12345, "172.16.50.50");
-//    m_receiver->client->setReadTimeout(10);
-    m_receiver->client->setConnectionTimeout(1, 10);
-    QObject::connect(m_receiver->client, &TcpClient::connected, this, [=]() {qDebug() << "CLIENT CONNECTED"; });
-    QObject::connect(m_receiver->client, &TcpClient::disconnected, this, [=]() {qDebug() << "CLIENT DISCONNECTED"; });
-    QObject::connect(m_receiver, &Manager::readyReads, this, [=] (QSharedPointer<QList<QSharedPointer<LogDataType>>> logs,
+    m_receiver->setConnectionType(SocketType::Server);
+    m_receiver->setConnectionSetting(54321, 54321, "172.16.50.50");
+//    m_receiver->client->setConnectionTimeout(1, 10);
+//    m_receiver->client->setReadTimeout(1);
+//    m_receiver->client->setMaxReadRetries(10);
+//    m_receiver->client->setAutoReconnect(true);
+    QObject::connect(m_receiver->client, SIGNAL(connected()), this, SLOT([=]() {qDebug() << "CLIENT CONNECTED" ; }));
+    QObject::connect(m_receiver->client, SIGNAL(disconnected()), this, SLOT([=]() {qDebug() << "CLIENT DISCONNECTED"<< m_receiver->client->autoReconnect();}));
+    QObject::connect(m_receiver, SIGNAL(readyReads(QSharedPointer<QList<QSharedPointer<LogDataType>>> logs,
+                                                   qreal az,
+                                                   qreal time)), this, SLOT([=] (QSharedPointer<QList<QSharedPointer<LogDataType>>> logs,
                                                                  qreal az,
                                                                  qreal time) {
         qDebug() << logs->size() << az << time;
-    });
+                     }));
 
-    m_receiver->client->setBlockingMode(true);
-
-    //    m_receiver->onBind();
-    m_receiver->onConnect();
+    m_receiver->onBind();
+//    m_receiver->onConnect();
 
 //    threadSend.start();
     threadRecv.start();
@@ -40,7 +42,7 @@ MainClass::MainClass(QObject *parent)
 //    writeCsv("/home/Arvand/wearily/Log166Hub/docs/logData-slow.csv",
 //             "/home/Arvand/Desktop/logDataWearily.csv", 3000);
 
-//    m_sender->onSendLog("/home/Arvand/Desktop/logData-slow1.csv", 1, 3);
+    m_receiver->onSendLog("/home/Arvand/Desktop/logDataWearily.csv", -1, 3);
 
 }
 

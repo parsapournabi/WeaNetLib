@@ -221,14 +221,14 @@ void TcpClient::read() {
         }
         else {
             if (m_autoReconnect) {/* This can't be true on client session which are created by TcpServer class. */
-                if (reconnectToHost())
+                if (reconnectToHost()) {
                     read();
-                else {
-                    m_sockfd = -1;
-                    m_isConnected = false;
-                    emit disconnected();
+                    return;
                 }
             }
+            m_sockfd = -1;
+            m_isConnected = false;
+            emit disconnected();
         }
     }
     // Means we have an error on recv.

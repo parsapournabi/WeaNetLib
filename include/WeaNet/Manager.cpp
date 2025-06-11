@@ -270,7 +270,7 @@ void Manager::onSendLog(QString csv_path, int repeat, int interval_index) {
     m_csvData = ParserFile::loadSlowData(m_readCsvPath);
     m_csvDataLen = m_csvData.size();
     m_interValIndex = interval_index;
-    m_repeatValue = repeat < 0 ? std::numeric_limits<int>::max() : repeat;
+    m_repeatValue = repeat;
     if (m_readCsvPath.isEmpty()) {
         qCritical() << "Error" << "Please upload yor smaple.csv file.";
         return;

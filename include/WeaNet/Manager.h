@@ -135,8 +135,8 @@ private:
     bool m_writeCsv = false;
     bool m_pauseSending = false;
     long m_csvReachedIndex = 0;
-    int m_repeatValue = 1;
-    int m_currentRepeater = 0;
+    unsigned int m_repeatValue = 1;
+    unsigned int m_currentRepeater = 0;
     TimePoint m_startTime = clock::now();
     double m_elapsedTime = 0.0;
     int m_interValIndex = 3;

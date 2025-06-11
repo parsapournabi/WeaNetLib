@@ -50,12 +50,12 @@ public:
     /// @note Must be called before connectToHost Method.
     /// @param int: timeout -> timeout value by seconds.
     /// @param int: retries -> number of retries (-1 means infinity & 0 means no timeout).
-    void setConnectionTimeout(int timeout, int retries);
+    void setConnectionTimeout(int timeout, unsigned int retries);
 
     /// @details (0, 0) means not Timeout.
     /// @default (2, -1) means infinity 2 seconds untill successful connection.
     /// @return int, int: timeout, retries.
-    std::pair<int, int> connectionTimeout() const;
+    std::pair<int, unsigned int> connectionTimeout() const;
 
     /// @details Auto Reconnect when the client has disconnected or ReadTimeout reached.
     /// @note This method can only set for each client has not created by TcpServer class.
@@ -162,7 +162,7 @@ private:
     /// @details Getter & Setter setConnectionTimeout & connectionTimeout.
     /// @param first == timeout value.
     /// @param second == retries value.
-    std::pair<int, int> m_connectionTimeout = {2, -1}; // Means infinity 2 seconds until successful connection
+    std::pair<int, unsigned int> m_connectionTimeout = {2, -1}; // Means infinity 2 seconds until successful connection
 
     /// @details Getter & Setter setAutoReconnect & autoReconnect.
     bool m_autoReconnect = true;

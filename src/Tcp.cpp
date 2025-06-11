@@ -172,13 +172,10 @@ void TcpClient::disconnectFromHost() {
     emit disconnected();
 }
 
-void TcpClient::setConnectionTimeout(int timeout, int retries) {
-    if (retries < 0)
-        retries = std::numeric_limits<int>::max();
-    m_connectionTimeout = {timeout < 1 ? 1 :  timeout, retries};
+void TcpClient::setConnectionTimeout(int timeout, unsigned int retries) { m_connectionTimeout = {timeout < 1 ? 1 :  timeout, retries};
 }
 
-std::pair<int, int> TcpClient::connectionTimeout() const { return m_connectionTimeout; }
+std::pair<int, unsigned int> TcpClient::connectionTimeout() const { return m_connectionTimeout; }
 
 void TcpClient::setAutoReconnect(bool enabled) { m_autoReconnect = m_isServerInstance ? false : enabled; }
 

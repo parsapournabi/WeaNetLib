@@ -45,7 +45,7 @@ TcpClient::TcpClient(int sockfd, WSAPOLLFD fds) {
     m_fds = fds;
 
     // SetOptions
-    setSocketOptions();
+//    setSocketOptions();
 
     // Monitor
 
@@ -60,13 +60,14 @@ TcpClient::TcpClient(int sockfd, struct pollfd fds) {
 
     this->m_pollLoop = false;
     this->m_isConnected = true;
+    this->m_autoReconnect = false;
 
     // workflow
     m_sockfd = sockfd;
     m_fds = fds;
 
     // SetOptions
-    setSocketOptions();
+//    setSocketOptions();
 
     // Monitor
 
@@ -82,7 +83,7 @@ bool TcpClient::connectToHost(const char* host, int port) {
     createSocket();
 
     // SetOptions
-    setSocketOptions();
+//    setSocketOptions();
 
     // Update state (host lookup).
     updateState(SocketState::HostLookupState, "Scanning for host...");
@@ -155,9 +156,18 @@ bool TcpClient::connectToHost(const char* host, int port) {
         updateState(SocketState::UnconnectedState, "Connection failed! Host unreachable.");
 
     // Definition
+    m_isServerInstance = false;
+    m_host = host;
+    m_port = port;
     m_peek = 0;
 
     return isConnected();
+}
+
+bool TcpClient::reconnectToHost() { return connectToHost(m_host, m_port); }
+
+void TcpClient::disconnectFromHost() {
+    emit disconnected();
 }
 
 void TcpClient::setConnectionTimeout(int timeout, int retries) {
@@ -168,9 +178,13 @@ void TcpClient::setConnectionTimeout(int timeout, int retries) {
 
 std::pair<int, int> TcpClient::connectionTimeout() const { return m_connectionTimeout; }
 
-void TcpClient::disconnectFromHost() {
-    emit disconnected();
-}
+void TcpClient::setAutoReconnect(bool enabled) { m_autoReconnect = m_isServerInstance ? false : enabled; }
+
+bool TcpClient::autoReconnect() const { return m_autoReconnect; }
+
+void TcpClient::setMaxReadRetries(int retries) { m_maxReadRetries = retries; }
+
+int TcpClient::maxReadRetries() const { return m_maxReadRetries; }
 
 bool TcpClient::isConnected() const { return m_isConnected; }
 
@@ -192,18 +206,37 @@ void TcpClient::read() {
     if (recv_bytes > 0) {
         void *rawptr = static_cast<void*>(m_buffer.data());
         m_peek--;
+        m_readRetries = 0;
         if (m_peek < 0)
             m_peek = 0;
         emit dataReceived(rawptr, recv_bytes);
     }
     // Means Server disconnected
     else if (recv_bytes == 0) {
-        emit disconnected();
+        qDebug() << "Recv: " << recv_bytes;
+        if (m_readRetries < m_maxReadRetries) {
+            QThread::sleep(readTimeout());
+            m_readRetries++;
+            read();
+        }
+        else {
+            if (m_autoReconnect) {/* This can't be true on client session which are created by TcpServer class. */
+                if (reconnectToHost())
+                    read();
+                else {
+                    m_sockfd = -1;
+                    m_isConnected = false;
+                    emit disconnected();
+                }
+            }
+        }
     }
     // Means we have an error on recv.
     else {
         // Checking if error number is equal to Disconnected client.
+        qDebug() << "Recv: " << recv_bytes;
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
+            qDebug() << "Client REcv: " << recv_bytes;
             emit disconnected();
         }
     }

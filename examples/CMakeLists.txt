@@ -3,7 +3,7 @@
 
 
 # DON'T IMPORT
-add_executable(WeaNetExamples
+add_library(WeaNetExamples
     main.cpp
     TcpClientExample.cpp
     TcpServerExample.cpp

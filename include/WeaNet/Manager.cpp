@@ -286,7 +286,6 @@ void Manager::onSendLog(QString csv_path, int repeat, int interval_index) {
 }
 
 void Manager::sendingCsvProcess() {
-    qDebug() << "CSV: " << m_csvDataLen;
     while (m_currentRepeater < m_repeatValue && !pauseSending()) {
         m_startTime = clock::now();
         m_elapsedTime = 0.0;
@@ -358,9 +357,10 @@ void Manager::onNewConnection() {
 //        client->setHighThroughputMode(ui->cbHighThroughput->isChecked());
 //        std::cout << "Client set throughmode: " << client << " Also List size: " << m_clientSockets.size() << std::endl;});
     QObject::connect(client, &TcpClient::disconnected, this, [this, client] () {
-        client->close();
+//        client->close();
+        client->deleteLater();
 //        disconnect(conn);
-        m_acceptedClients.erase(std::remove(m_acceptedClients.begin(), m_acceptedClients.end(), client), m_acceptedClients.end());});
+        m_acceptedClients.erase(std::remove(m_acceptedClients.begin(), m_acceptedClients.end(), client), m_acceptedClients.end());}, Qt::DirectConnection);
     std::cout << "Current thread on NewConnection(): " << QThread::currentThread() << std::endl;
 
 }

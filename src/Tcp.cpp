@@ -97,9 +97,25 @@ bool TcpClient::connectToHost(const char* host, int port) {
     updateState(SocketState::ConnectingState, "Attempting secure connection...");
 
     // Trying to connect
-    int c = ::connect(m_sockfd, (const struct sockaddr*)&m_servaddr, m_servlen);
+    std::ostringstream err_message;
+    int attempt = 1;
+    int c_res;
+    do {
+        c_res = ::connect(m_sockfd, (const struct sockaddr*)&m_servaddr, m_servlen);
+        if (c_res < 0) {
+            err_message.str("");
+            err_message.clear();
+            err_message << "Attempts No." << attempt << ' ' << "Connection failed! Host unreachable." ;
+            QThread::sleep(m_connectionTimeout.first);
+        }
+        attempt++;
+    }
+    while(occurError(c_res,
+                    SocketError::ConnectionRefusedError,
+                    err_message.str().c_str()) && attempt <= m_connectionTimeout.second);
+
+    if (c_res >= 0) {
     // Check connection response...
-    if (!occurError(c, SocketError::ConnectionRefusedError, "Connectoin failed! Host unreachable.")) {
         // Locating local & peer address
         locateAddresses();
 
@@ -116,7 +132,7 @@ bool TcpClient::connectToHost(const char* host, int port) {
 
 
     // Assign true if response is not -1 else false
-    m_isConnected = c < 0 ? false : true;
+    m_isConnected = c_res < 0 ? false : true;
 
 
     // Set host & peer addresses & ports
@@ -143,6 +159,14 @@ bool TcpClient::connectToHost(const char* host, int port) {
 
     return isConnected();
 }
+
+void TcpClient::setConnectionTimeout(int timeout, int retries) {
+    if (retries < 0)
+        retries = std::numeric_limits<int>::max();
+    m_connectionTimeout = {timeout < 1 ? 1 :  timeout, retries};
+}
+
+std::pair<int, int> TcpClient::connectionTimeout() const { return m_connectionTimeout; }
 
 void TcpClient::disconnectFromHost() {
     emit disconnected();

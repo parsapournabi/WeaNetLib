@@ -41,6 +41,16 @@ public:
     /// @param int: port -> SERVER_PORT_ADDRESS
     bool connectToHost(const char* host, int port);
 
+    /// @details Connection timeout with retries.
+    /// @note Must be called before connectToHost Method.
+    /// @param int: timeout -> timeout value by seconds.
+    /// @param int: retries -> number of retries (-1 means infinity & 0 means no timeout).
+    void setConnectionTimeout(int timeout, int retries);
+
+    /// @details Default is (0, 0) means not Timeout.
+    /// @return int, int: timeout, retries.
+    std::pair<int, int> connectionTimeout() const;
+
     /// @return bool: true @if socket is connected to server @else false.
     bool isConnected() const;
 
@@ -116,6 +126,11 @@ private:
 
     /// isHighThroughputMode property
     bool m_highThroughputMode = false;
+
+    /// @details Getter & Setter setConnectionTimeout & connectionTimeout.
+    /// @param first == timeout value.
+    /// @param second == retries value.
+    std::pair<int, int> m_connectionTimeout = {0, 0};
 
 #ifdef _WIN32
     WSAPOLLFD m_fds;
@@ -213,6 +228,7 @@ private:
     /// @details to pause or resume the loop, check pauseAccepting() & resumeAccepting() functions.
     /// @details true == resume, false == pause
     bool m_resumeAccepting = true;
+
 };
 }
 

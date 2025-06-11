@@ -25,13 +25,11 @@ MainClass::MainClass(QObject *parent)
 //    m_receiver->client->setAutoReconnect(true);
 //    QObject::connect(m_receiver->client, SIGNAL(connected()), this, SLOT([=]() {qDebug() << "CLIENT CONNECTED" ; }));
 //    QObject::connect(m_receiver->client, SIGNAL(disconnected()), this, SLOT([=]() {qDebug() << "CLIENT DISCONNECTED"<< m_receiver->client->autoReconnect();}));
-    QObject::connect(m_receiver, SIGNAL(readyReads(QSharedPointer<QList<QSharedPointer<LogDataType>>> logs,
-                                                   qreal az,
-                                                   qreal time)), this, SLOT([=] (QSharedPointer<QList<QSharedPointer<LogDataType>>> logs,
+    QObject::connect(m_receiver, &Manager::readyReads, this, [=] (QSharedPointer<QList<QSharedPointer<LogDataType>>> logs,
                                                                  qreal az,
                                                                  qreal time) {
         qDebug() << logs->size() << az << time;
-                     }), Qt::DirectConnection);
+                     }, Qt::DirectConnection);
 
     m_receiver->onBind();
 //    m_receiver->onConnect();

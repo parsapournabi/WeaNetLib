@@ -158,6 +158,7 @@ bool TcpClient::connectToHost(const char* host, int port) {
 
     // Definition
     m_isServerInstance = false;
+    m_canWriteMsg = true;
     m_host = host;
     m_port = port;
     m_peek = 0;
@@ -208,13 +209,14 @@ void TcpClient::read() {
         void *rawptr = static_cast<void*>(m_buffer.data());
         m_peek--;
         m_readRetries = 0;
+        m_canWriteMsg = true;
         if (m_peek < 0)
             m_peek = 0;
         emit dataReceived(rawptr, recv_bytes);
     }
     // Means Server disconnected
     else if (recv_bytes == 0) {
-        qDebug() << "Recv: " << recv_bytes;
+        m_canWriteMsg = false;
         if (m_readRetries < m_maxReadRetries) {
             QThread::sleep(readTimeout());
             m_readRetries++;
@@ -235,9 +237,7 @@ void TcpClient::read() {
     // Means we have an error on recv.
     else {
         // Checking if error number is equal to Disconnected client.
-        qDebug() << "Recv: " << recv_bytes;
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
-            qDebug() << "Client REcv: " << recv_bytes;
             emit disconnected();
         }
     }
@@ -249,6 +249,11 @@ int TcpClient::write(void *buffer, int flags) {
     if (m_isConnected == false) {
         occurError(-1, SocketError::UnsupportedSocketOperationError, "Socket isn't connect!");
         return -1;
+    }
+    while (!m_canWriteMsg) { /** Must be freeze until server bound **/
+        if (!m_isConnected)
+            return -1;
+        QThread::sleep(1);
     }
 
 #ifdef _WIN32
@@ -316,6 +321,7 @@ void TcpClient::handlerRead() {
             if (m_peek <= 0) {
                 m_peek++;
                 emit readyRead();
+
             }
         }
 #endif

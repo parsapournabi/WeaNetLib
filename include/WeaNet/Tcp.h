@@ -46,12 +46,14 @@ public:
     bool reconnectToHost();
 
     /// @details Connection timeout with retries.
+    /// @default (2, -1) means infinity 2 seconds untill successful connection.
     /// @note Must be called before connectToHost Method.
     /// @param int: timeout -> timeout value by seconds.
     /// @param int: retries -> number of retries (-1 means infinity & 0 means no timeout).
     void setConnectionTimeout(int timeout, int retries);
 
-    /// @details Default is (0, 0) means not Timeout.
+    /// @details (0, 0) means not Timeout.
+    /// @default (2, -1) means infinity 2 seconds untill successful connection.
     /// @return int, int: timeout, retries.
     std::pair<int, int> connectionTimeout() const;
 
@@ -68,12 +70,12 @@ public:
 
     /// @details this attribute is a maximum retrying for reading after each Timeout.
     /// @details After maximum retries reached the process will emit disconnected.
-    /// @default := 1
+    /// @default := 10
     /// @param int : retries -> number of retry
     void setMaxReadRetries(int retries);
 
     /// @details Getter of setMaxReadRetries
-    /// @default := 1
+    /// @default := 10
     /// @return int: number of retries
     int maxReadRetries() const;
 
@@ -160,7 +162,7 @@ private:
     /// @details Getter & Setter setConnectionTimeout & connectionTimeout.
     /// @param first == timeout value.
     /// @param second == retries value.
-    std::pair<int, int> m_connectionTimeout = {0, 0};
+    std::pair<int, int> m_connectionTimeout = {2, -1}; // Means infinity 2 seconds until successful connection
 
     /// @details Getter & Setter setAutoReconnect & autoReconnect.
     bool m_autoReconnect = true;
@@ -169,10 +171,13 @@ private:
     int m_readRetries = 0;
 
     /// @details Getter & Setter setMaxReadRetries & maxReadRetries.
-    int m_maxReadRetries = 1;
+    int m_maxReadRetries = 10;
 
     /// @details a flag to ignore some methods if client instance is created by TcpServer
     bool m_isServerInstance = true;
+
+    /// @details When Server goes to unbound mode and the client is on the sending mode the process must be wait untill server connecting
+    bool m_canWriteMsg = true;
 
 #ifdef _WIN32
     WSAPOLLFD m_fds;

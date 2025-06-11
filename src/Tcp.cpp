@@ -15,6 +15,7 @@ TcpClient::TcpClient() {
     this->m_socketType = SocketType::Client;
 
     this->m_isConnected = false;
+    this->m_isServerInstance = false;
 
     // threads & workers
     workerThread = new QThread();
@@ -182,7 +183,7 @@ void TcpClient::setAutoReconnect(bool enabled) { m_autoReconnect = m_isServerIns
 
 bool TcpClient::autoReconnect() const { return m_autoReconnect; }
 
-void TcpClient::setMaxReadRetries(int retries) { m_maxReadRetries = retries; }
+void TcpClient::setMaxReadRetries(int retries) { m_maxReadRetries = retries < 0 ? 1 : retries; }
 
 int TcpClient::maxReadRetries() const { return m_maxReadRetries; }
 

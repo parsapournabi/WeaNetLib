@@ -11,6 +11,8 @@
 #include "WeaNet/Internal/enumPackets.h"
 #include "WeaNet/Internal/logdatatype.h"
 
+//#define CELL_DATA
+
 using namespace WeaNet;
 namespace WeaNet {
 class Manager : public QObject
@@ -47,8 +49,11 @@ signals:
     void signalSendSpeed(double speed);
 
     void readyRead(LogDataType *);
-
+#ifdef CELL_DATA
+    void readyReads(QSharedPointer<QList<QSharedPointer<CellData>>> logs, qreal az, qreal time);
+#else
     void readyReads(QSharedPointer<QList<QSharedPointer<LogDataType>>> logs, qreal az, qreal time);
+#endif
 
 public slots:
 

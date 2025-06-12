@@ -347,7 +347,8 @@ void Manager::onNewConnection() {
     TcpClient* client = server->nexPendingConnection();
     m_acceptedClients.push_back(client);
     client->setAutoRead(true);
-    client->setBufferSize(1040);
+    client->setBufferSize(TCP_BUFFER_SIZE);
+//    client->setHighThroughputMode(true);
     //    QObject::connect(client, &TcpClient::readyRead, this, [client] () { client->read(); });
     QObject::connect(client, &TcpClient::errorOccured, this, &Manager::onErrorOccured, Qt::DirectConnection);
     QObject::connect(client, &TcpClient::stateUpdated, this, &Manager::onStateUpdated, Qt::DirectConnection);
@@ -422,6 +423,31 @@ void Manager::onParseData(QByteArray *bytes) {
 
     int unPacketSize = 6;
 #ifdef MULTI_EMIT
+#ifdef CELL_DATA
+    QSharedPointer<QList<QSharedPointer<CellData>>> logDatas = QSharedPointer<QList<QSharedPointer<CellData>>>::create();
+    QDataStream stream(bytes, QIODevice::ReadOnly);
+    stream.setByteOrder(QDataStream::LittleEndian);
+    uint8_t dataSize;
+    stream >> dataSize;
+    for (int i = 1; i < (dataSize * unPacketSize) + 1; i += unPacketSize){
+        QSharedPointer<CellData>logData = QSharedPointer<CellData>::create();
+        double temp = 0;
+        stream >> temp;
+        logData->setAz(temp);
+        stream >> temp;
+        logData->setElv(temp);
+        stream >> temp;
+        logData->setRangeCell(temp);
+        stream >> temp;
+        logData->setTime(temp);
+        stream >> temp;
+        logData->setPower(temp);
+        stream >> temp;
+
+        logDatas->append(logData);
+    }
+    emit readyReads(logDatas, logDatas->constLast()->azimuth(), logDatas->constLast()->time());
+#else
     QSharedPointer<QList<QSharedPointer<LogDataType>>> logDatas = QSharedPointer<QList<QSharedPointer<LogDataType>>>::create();
     QDataStream stream(bytes, QIODevice::ReadOnly);
     stream.setByteOrder(QDataStream::LittleEndian);
@@ -439,6 +465,7 @@ void Manager::onParseData(QByteArray *bytes) {
         logDatas->append(logData);
     }
     emit readyReads(logDatas, logDatas->constLast()->azimuth(), logDatas->constLast()->time());
+#endif
 
 #else
     LogDataType *logDataType = new LogDataType();

@@ -17,8 +17,8 @@ MainClass::MainClass(QObject *parent)
 
     m_receiver = new Manager();
     m_receiver->moveToThread(&threadRecv);
-    m_receiver->setConnectionType(SocketType::UdpSocket);
-    m_receiver->setConnectionSetting(54321, 54321, "172.16.50.50");
+    m_receiver->setConnectionType(SocketType::Client);
+    m_receiver->setConnectionSetting(54321, 54321, "127.0.0.1");
 //    m_receiver->client->setConnectionTimeout(1, 10);
 //    m_receiver->client->setReadTimeout(1);
 //    m_receiver->client->setMaxReadRetries(10);
@@ -31,7 +31,7 @@ MainClass::MainClass(QObject *parent)
             qDebug() << logs->constLast()->recvPackets.ctime << az << time;
                      });
 
-    m_receiver->onBind();
+//    m_receiver->onBind();
     m_receiver->onConnect();
 
 //    threadSend.start();
@@ -40,7 +40,7 @@ MainClass::MainClass(QObject *parent)
 //    writeCsv("/home/Arvand/wearily/Log166Hub/docs/logData-slow.csv",
 //             "/home/Arvand/Desktop/logDataWearily.csv", 3000);
 
-//    m_receiver->onSendLog("/home/Arvand/Desktop/logDataWearily.csv", -1, 3);
+    m_receiver->onSendLog("/home/Arvand/Desktop/logDataWearily.csv", -1, 3);
 
 }
 

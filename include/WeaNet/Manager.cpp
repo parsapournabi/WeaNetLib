@@ -298,7 +298,7 @@ void Manager::sendingCsvProcess() {
             else
                 byte.resize(TCP_BUFFER_SIZE);
             byte.fill(0x00, byte.size());
-            QDataStream stream(&byte, QIODevice::WriteOnly);
+            QDataStream stream(&byte, QDataStream::WriteOnly);
             stream.setByteOrder(QDataStream::LittleEndian);
             uint8_t dataSize = 1;
             do {
@@ -449,7 +449,7 @@ void Manager::onParseData(QByteArray *bytes) {
     emit readyReads(logDatas, logDatas->constLast()->azimuth(), logDatas->constLast()->time());
 #else
     QSharedPointer<QList<QSharedPointer<LogDataType>>> logDatas = QSharedPointer<QList<QSharedPointer<LogDataType>>>::create();
-    QDataStream stream(bytes, QIODevice::ReadOnly);
+    QDataStream stream(bytes, QDataStream::ReadOnly);
     stream.setByteOrder(QDataStream::LittleEndian);
     uint8_t dataSize;
     stream >> dataSize;

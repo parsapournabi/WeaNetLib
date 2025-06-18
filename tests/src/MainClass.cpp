@@ -5,45 +5,52 @@
 
 
 MainClass::MainClass(QObject *parent)
-    : Manager{parent}
+    : QObject(parent)
 {
 
-//    m_sender = new Manager();
-//    m_sender->moveToThread(&threadSend);
-//    m_sender->setConnectionType(SocketType::Server);
-//    m_sender->setConnectionSetting(12345, 54321, "172.16.50.50");
-//    m_sender->onBind();
+    //    m_sender = new Manager();
+    //    m_sender->moveToThread(&threadSend);
+    //    m_sender->setConnectionType(SocketType::Server);
+    //    m_sender->setConnectionSetting(12345, 54321, "172.16.50.50");
+    //    m_sender->onBind();
     //    sender->onConnect();
 
     m_receiver = new Manager();
     m_receiver->moveToThread(&threadRecv);
-    m_receiver->setConnectionType(SocketType::Client);
-    m_receiver->setConnectionSetting(54321, 54321, "127.0.0.1");
-//    m_receiver->client->setConnectionTimeout(1, 10);
-//    m_receiver->client->setReadTimeout(1);
-//    m_receiver->client->setMaxReadRetries(10);
-//    m_receiver->client->setAutoReconnect(true);
-//    QObject::connect(m_receiver->client, SIGNAL(connected()), this, SLOT([=]() {qDebug() << "CLIENT CONNECTED" ; }));
-//    QObject::connect(m_receiver->client, SIGNAL(disconnected()), this, SLOT([=]() {qDebug() << "CLIENT DISCONNECTED"<< m_receiver->client->autoReconnect();}));
-    QObject::connect(m_receiver, &Manager::readyReads, this, [=] (QSharedPointer<QList<QSharedPointer<LogDataType>>> logs,
-                                                                 qreal az,
-                                                                 qreal time) {
-            qDebug() << logs->constLast()->recvPackets.ctime << az << time;
-                     });
+    m_receiver->setConnectionType(SocketType::UdpSocket);
+    m_receiver->setConnectionSetting(12347, 54321, "127.0.0.1");
+    m_receiver->onHighThroughput(true);
+    //    m_receiver->client->setConnectionTimeout(1, 10);
+    //    m_receiver->client->setReadTimeout(1);
+    //    m_receiver->client->setMaxReadRetries(10);
+    //    m_receiver->client->setAutoReconnect(true);
+    //    QObject::connect(m_receiver->client, SIGNAL(connected()), this, SLOT([=]() {qDebug() << "CLIENT CONNECTED" ; }));
+    //    QObject::connect(m_receiver->client, SIGNAL(disconnected()), this, SLOT([=]() {qDebug() << "CLIENT DISCONNECTED"<< m_receiver->client->autoReconnect();}));
+    QObject::connect(m_receiver, SIGNAL(readyReads(QSharedPointer<QList<QSharedPointer<LogDataType>>> ,qreal,qreal)), this, SLOT(onReadyReads(QSharedPointer<QList<QSharedPointer<LogDataType>>> ,qreal,qreal)), Qt::DirectConnection);
 
-//    m_receiver->onBind();
+
+
+    m_receiver->onBind();
     m_receiver->onConnect();
 
-//    threadSend.start();
+    //    threadSend.start();
     threadRecv.start();
 
-//    writeCsv("/home/Arvand/wearily/Log166Hub/docs/logData-slow.csv",
-//             "/home/Arvand/Desktop/logDataWearily.csv", 3000);
+    //    writeCsv("/home/Arvand/wearily/Log166Hub/docs/logData-slow.csv",
+    //             "/home/Arvand/Desktop/logDataWearily.csv", 3000);
 
-    m_receiver->onSendLog("/home/Arvand/Desktop/logDataWearily.csv", -1, 3);
-
+    // m_receiver->onSendLog("/home/Arvand/Desktop/logDataWearily.csv", -1, 3);
+    // m_receiver->onSendLog("C:/Users/PARSA/Desktop/logger.csv", -1, 3);
+    QMetaObject::invokeMethod(m_receiver, "onSendLog", Q_ARG(QString, "C:/Users/PARSA/Desktop/logger.csv"),
+                              Q_ARG(int, -1),
+                              Q_ARG(int, 3));
 }
 
+
+void MainClass::onReadyReads(QSharedPointer<QList<QSharedPointer<LogDataType>>> logs, qreal az, qreal time) {
+
+    qDebug() << logs->constLast()->recvPackets.ctime << ' ' << logs->size() << ' ' << az << ' ' << time;
+}
 
 void MainClass::writeCsv(QString csvReadPath, QString csvWritePath, int rowToWrite) {
     std::vector<std::vector<double>> matrix = ParserFile::loadSlowData(csvReadPath);

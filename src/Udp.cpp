@@ -43,9 +43,10 @@ bool Udp::bind(const char *host, int port) {
     // Creating Socket if its already closed.
     if (m_sockfd < 0) {
         createSocket();
-        // SetOptions
-        setServerReuseOption();
     }
+    // SetOptions
+    setServerReuseOption();
+    setSocketOptions();
 
     // Server configuration
     memset(&m_servaddr, 0, sizeof(m_servaddr));
@@ -65,7 +66,6 @@ bool Udp::bind(const char *host, int port) {
 
     // Bind & check errors
     int b = ::bind(m_sockfd, (const struct sockaddr*)&m_servaddr, m_servlen);
-    std::cout << "Bind result: " << b << " Socket FD: " << m_sockfd << std::endl;
     if (occurError(b, SocketError::SocketBindError, "Socket binding failed!"))
         return false;
     else {
@@ -118,22 +118,30 @@ void Udp::receiveDatagram() {
         occurError(-1, SocketError::UnsupportedSocketOperationError, "Socket isn't connect!");
         return;
     }
-    sockaddr_in cliaddr;
+    struct sockaddr_in cliaddr;
 
 #ifdef _WIN32
-    int clilen = sizeof(clilen);
-    int recv_bytes = ::recvfrom(m_sockfd, (char *)m_buffer.data(), bufferSize(), MSG_WAITALL, (sockaddr *)&cliaddr, &clilen);
+    socklen_t clilen = sizeof(cliaddr);
+    int recv_bytes = ::recvfrom(m_sockfd, (char *)m_buffer.data(), bufferSize(), 0, (sockaddr *)&cliaddr, &clilen);
+    // Avoid race condition
+    m_peek--;
+    if (m_peek < 0)
+        m_peek = 0;
+
 #else
     socklen_t clilen = sizeof(clilen);
     int recv_bytes = ::recvfrom(m_sockfd, (void *)m_buffer.data(), bufferSize(), MSG_WAITALL, (sockaddr *)&cliaddr, &clilen);
 #endif
     occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
-
+    qDebug() << "Recv Bytes: " << recv_bytes << m_peek;
     if (recv_bytes > 0) {
         void *rawptr = static_cast<void*>(m_buffer.data());
+#ifndef  _WIN32
         m_peek--;
         if (m_peek < 0)
             m_peek = 0;
+
+#endif
         emit dataReceived(rawptr, recv_bytes, inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
     }
 }

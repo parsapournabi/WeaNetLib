@@ -43,7 +43,8 @@ set(SOURCES
             )
 add_library(WeaNet
     SHARED ${SOURCES} ${HEADERS}
-    install.sh README.md uninstall.sh WeaNetConfig.cmake.in WeaNetUninstall.cmake.in
+    README.md install.sh uninstall.sh WeaNetConfig.cmake.in WeaNetUninstall.cmake.in
+    .gitignore
 
 )
 set(WEANET_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)

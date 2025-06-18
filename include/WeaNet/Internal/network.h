@@ -82,7 +82,8 @@ public:
     bool isValidIPv4Address(const char *host) const;
 
     /// @details Socket getsockopt(socketOption). SO_RCVTIMEO.
-    /// @return int: timeout value (units = seconds).
+    /// @return int: timeout value (units = seconds) ***ON UNIX DEVICES***.
+    /// @return int: timeout value (units = milliseconds) ***ON WINDOWS DEVICES***.
     int readTimeout() const;
 
     /// @details Socket setsockopt (setOption). SO_RCVTIMEO

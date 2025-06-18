@@ -159,11 +159,26 @@ bool Network::isValidIPv4Address(const char *host) const {
 
 }
 
-int Network::readTimeout() const { return m_rcvTimeout; }
+int Network::readTimeout() const {
+#ifdef _WIN32
+    return m_rcvTimeout * 1000;
+#else
+    return m_rcvTimeout;
+
+#endif
+}
 
 void Network::setReadTimeout(int sec) { m_rcvTimeout = sec < 0 ? 0 : sec; }
 
-int Network::writeTimeout() const { return m_sndTimeout; }
+int Network::writeTimeout() const {
+#ifdef _WIN32
+    return m_sndTimeout * 1000;
+#else
+    return m_sndTimeout;
+
+#endif
+
+}
 
 void Network::setWriteTimeout(int sec) { m_sndTimeout = sec < 0 ? 0 : sec; }
 
@@ -189,7 +204,7 @@ void Network::close() {
     // Clearing memories
     cleanUp();
 
-    // Closing socket.
+// Closing socket.
 #ifdef _WIN32
     ::closesocket(m_sockfd);
 #else
@@ -249,46 +264,46 @@ void Network::locateAddresses() {
 
     // If SocketType is TcpClient
     switch (socketType()) {
-        case SocketType::Client:
-            // Set server Address
-            setPeerAddress(inet_ntoa(m_servaddr.sin_addr));
-            // Set server Port
-            setPeerPort(ntohs(m_servaddr.sin_port));
+    case SocketType::Client:
+        // Set server Address
+        setPeerAddress(inet_ntoa(m_servaddr.sin_addr));
+        // Set server Port
+        setPeerPort(ntohs(m_servaddr.sin_port));
 
-            // Set local Address
-            setLocalAddress(inet_ntoa(addr.sin_addr));
-            // Set local Port
-            setLocalPort(ntohs(addr.sin_port));
-            break;
-        case SocketType::Server:
-            // Set server Address
-            setPeerAddress(inet_ntoa(addr.sin_addr));
-            // Set server Port
-            setPeerPort(ntohs(addr.sin_port));
+        // Set local Address
+        setLocalAddress(inet_ntoa(addr.sin_addr));
+        // Set local Port
+        setLocalPort(ntohs(addr.sin_port));
+        break;
+    case SocketType::Server:
+        // Set server Address
+        setPeerAddress(inet_ntoa(addr.sin_addr));
+        // Set server Port
+        setPeerPort(ntohs(addr.sin_port));
 
-            // Set local Address
-            setLocalAddress(inet_ntoa(m_servaddr.sin_addr));
-            // Set local Port
-            setLocalPort(ntohs(m_servaddr.sin_port));
-            break;
-        case SocketType::UdpSocket:
-            // Set server Address
-            setPeerAddress(inet_ntoa(addr.sin_addr));
-            // Set server Port
-            setPeerPort(ntohs(addr.sin_port));
+        // Set local Address
+        setLocalAddress(inet_ntoa(m_servaddr.sin_addr));
+        // Set local Port
+        setLocalPort(ntohs(m_servaddr.sin_port));
+        break;
+    case SocketType::UdpSocket:
+        // Set server Address
+        setPeerAddress(inet_ntoa(addr.sin_addr));
+        // Set server Port
+        setPeerPort(ntohs(addr.sin_port));
 
-            // Set local Address
-            setLocalAddress(inet_ntoa(m_servaddr.sin_addr));
-            // Set local Port
-            setLocalPort(ntohs(m_servaddr.sin_port));
-            break;
+        // Set local Address
+        setLocalAddress(inet_ntoa(m_servaddr.sin_addr));
+        // Set local Port
+        setLocalPort(ntohs(m_servaddr.sin_port));
+        break;
     }
 
 }
 
-bool Network::occurError(int target, SocketError socketError, const char *err_message, int condition) {
+bool Network::occurError(int target, SocketError socketError, const char *err_message, int condition, bool fixed) {
     // Check if we have any error
-    if (target < condition) {
+    if ((!fixed && target < condition) || (fixed && target == condition)) {
         // getter of latestError()
         m_latestError = socketError;
         // Converting err_message
@@ -323,7 +338,7 @@ bool Network::occurError(int target, SocketError socketError, const char *err_me
 #endif
         if (debugMode()) {
             std::cerr << message.c_str() << std::endl;
-//            print_stacktrace();
+            //            print_stacktrace();
         }
         emit errorOccured(socketError, message.c_str());
         return true;
@@ -368,7 +383,7 @@ void Network::cleanUp() { // is not finished already
     m_isConnected = false;
     m_isListening = false;
     m_isBind = false;
-//    m_pollLoop = false;
+    m_pollLoop = false;
     // Clearing state & options variable to default.
     m_latestError = SocketError::NoError;
     m_latestState = SocketState::NoSocketState;

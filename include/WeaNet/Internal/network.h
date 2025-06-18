@@ -186,7 +186,7 @@ protected:
     /// @param int: condition -> The condition value for example (target < condition).
     /// @return bool: true if any error occured. else false. (usage is on the internal method conditions which helps to break the funcitons if we had any error).
     /// In @class usage: after the process written, then the latest_error_ must be set with socketError.
-    bool occurError(int target, SocketError socketError, const char *err_message = "An error occured: ", int condition = 0);
+    bool occurError(int target, SocketError socketError, const char *err_message = "An error occured: ", int condition = 0, bool fixed = false);
 
     /// @details This method will emit stateUpdated signal.
     /// @note : If you setDebugMode(true) the state messages goes printable.

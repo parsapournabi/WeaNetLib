@@ -40,13 +40,14 @@ TcpClient::TcpClient(int sockfd, WSAPOLLFD fds) {
 
     this->m_pollLoop = false;
     this->m_isConnected = true;
+    this->m_autoReconnect = false;
 
     // workflow
     m_sockfd = sockfd;
     m_fds = fds;
 
     // SetOptions
-//    setSocketOptions();
+   // setSocketOptions();
 
     // Monitor
 
@@ -68,7 +69,7 @@ TcpClient::TcpClient(int sockfd, struct pollfd fds) {
     m_fds = fds;
 
     // SetOptions
-//    setSocketOptions();
+   setSocketOptions();
 
     // Monitor
 
@@ -84,7 +85,7 @@ bool TcpClient::connectToHost(const char* host, int port) {
     createSocket();
 
     // SetOptions
-//    setSocketOptions();
+   // setSocketOptions();
 
     // Update state (host lookup).
     updateState(SocketState::HostLookupState, "Scanning for host...");
@@ -187,6 +188,31 @@ int TcpClient::maxReadRetries() const { return m_maxReadRetries; }
 
 bool TcpClient::isConnected() const { return m_isConnected; }
 
+void TcpClient::handlerReadTimeout() {
+    m_canWriteMsg = false;
+    if (m_readRetries < m_maxReadRetries) {
+
+#ifdef _WIN32
+        QThread::sleep(readTimeout() / 1000);
+#else
+        QThread::sleep(readTimeout());
+#endif
+        m_readRetries++;
+        read();
+    }
+    else {
+        if (m_autoReconnect) {/* This can't be true on client session which are created by TcpServer class. */
+            if (reconnectToHost()) {
+                read();
+                return;
+            }
+        }
+        m_sockfd = -1;
+        m_isConnected = false;
+        emit disconnected();
+    }
+}
+
 void TcpClient::read() {
     if (occurError(m_sockfd, SocketError::SocketAccessError, "Socket isn't defined!"))
         return;
@@ -194,49 +220,49 @@ void TcpClient::read() {
         occurError(-1, SocketError::UnsupportedSocketOperationError, "Socket isn't connect!");
         return;
     }
+    // qDebug() << "Before Recv bytes: " << m_peek << ' ' <<  m_readRetries << m_canWriteMsg;
+
 #ifdef _WIN32
     int recv_bytes = ::recv(m_sockfd, (char *)m_buffer.data(), bufferSize(), MSG_WAITALL);
+    // Avoid race condition
+    m_peek--;
+    if (m_peek < 0)
+        m_peek = 0;
 #else
     int recv_bytes = ::recv(m_sockfd, (void *)m_buffer.data(), bufferSize(), MSG_WAITALL);
 #endif
     occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
+    // qDebug() << "Recv bytes: " << recv_bytes << m_peek << ' ' <<  m_readRetries << m_canWriteMsg;
 
     // Data received
     if (recv_bytes > 0) {
         void *rawptr = static_cast<void*>(m_buffer.data());
-        m_peek--;
         m_readRetries = 0;
         m_canWriteMsg = true;
+#ifndef _WIN32
+        m_peek--;
         if (m_peek < 0)
             m_peek = 0;
+#endif
         emit dataReceived(rawptr, recv_bytes);
     }
     // Means Server disconnected
     else if (recv_bytes == 0) {
-        m_canWriteMsg = false;
-        if (m_readRetries < m_maxReadRetries) {
-            QThread::sleep(readTimeout());
-            m_readRetries++;
-            read();
-        }
-        else {
-            if (m_autoReconnect) {/* This can't be true on client session which are created by TcpServer class. */
-                if (reconnectToHost()) {
-                    read();
-                    return;
-                }
-            }
-            m_sockfd = -1;
-            m_isConnected = false;
-            emit disconnected();
-        }
+        handlerReadTimeout();
     }
     // Means we have an error on recv.
     else {
-        // Checking if error number is equal to Disconnected client.
+#ifdef _WIN32
+        if (m_isServerInstance)
+            emit disconnected();
+        else
+            handlerReadTimeout();
+#else
+    // Checking if error number is equal to Disconnected client.
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
             emit disconnected();
         }
+#endif
     }
 }
 
@@ -258,6 +284,7 @@ int TcpClient::write(void *buffer, int flags) {
 #else
     int s = ::send(m_sockfd, buffer, bufferSize(), flags);
 #endif
+    // qDebug() << "Write " << m_sockfd << m_isConnected << m_canWriteMsg << s;
     if(!occurError(s, SocketError::SocketTimeoutError, "No bytes sent!", 1))
         emit bytesWritten(s);
     return s;
@@ -306,12 +333,23 @@ void TcpClient::handlerRead() {
         int timeout_ms = 200;
 #ifdef _WIN32
         int ret_fd = WSAPoll(&m_fds, 1, timeout_ms);
-        if (ret_fd > 0 && (m_fds.revents & POLLRDNORM)) {
-            if (m_peek <= 0) {
-                m_peek++;
-                emit readyRead();
+        if (ret_fd > 0) {
+            if(m_fds.revents & POLLRDNORM) {
+                if (m_peek <= 0) {
+                    m_peek++;
+                    emit readyRead();
+                }
+            }
+            else if (m_fds.revents & POLLERR) {
+                handlerReadTimeout();
             }
         }
+        // else if (ret_fd == 0) {
+        //     qDebug() << "ret_fd is 0: " << ret_fd;
+        // }
+        // else
+        //     qDebug() << "ret_fd is < 0: " << ret_fd;
+
 #else
         int ret_fd = poll(&m_fds, 1, timeout_ms);
         if (ret_fd > 0 && (m_fds.revents & POLLIN)) {

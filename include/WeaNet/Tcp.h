@@ -145,6 +145,9 @@ private:
     /// @details reading handler when mode is setted on HighThroughput or not.
     void handlerRead();
 
+    /// @details if any error occure while reading data this method will handle that.
+    void handlerReadTimeout();
+
 private:
     // Private variables
 

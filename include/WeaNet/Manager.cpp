@@ -113,7 +113,58 @@ void Manager::onHighThroughput(bool enable) {
     udp->setHighThroughputMode(enable);
 }
 
+std::pair<int, unsigned int> Manager::connectionTimeout() const { return client->connectionTimeout(); }
+void Manager::setConnectionTimeout(int timeout, int retries) { client->setConnectionTimeout(timeout, retries); }
 
+int Manager::readTimeout() const {
+    if (m_socketType == SocketType::Client) {
+        return client->readTimeout();
+    } else if (m_socketType == SocketType::Server) {
+        for (auto &cli : m_acceptedClients)
+            return cli->readTimeout();
+    } else if (m_socketType == SocketType::UdpSocket) {
+        return udp->readTimeout();
+    }
+    return -1;
+}
+void Manager::setReadTimeout(int sec) {
+    if (m_socketType == SocketType::Client) {
+        client->setReadTimeout(sec);
+    } else if (m_socketType == SocketType::Server) {
+        for (auto &cli : m_acceptedClients)
+            cli->setReadTimeout(sec);
+    } else if (m_socketType == SocketType::UdpSocket) {
+        udp->setReadTimeout(sec);
+    }
+}
+
+int Manager::writeTimeout() const {
+    if (m_socketType == SocketType::Client) {
+        return client->writeTimeout();
+    } else if (m_socketType == SocketType::Server) {
+        for (auto &cli : m_acceptedClients)
+            return cli->writeTimeout();
+    } else if (m_socketType == SocketType::UdpSocket) {
+        return udp->writeTimeout();
+    }
+    return -1;
+}
+void Manager::setWriteTimeout(int sec) {
+    if (m_socketType == SocketType::Client) {
+        client->setWriteTimeout(sec);
+    } else if (m_socketType == SocketType::Server) {
+        for (auto &cli : m_acceptedClients)
+            cli->setWriteTimeout(sec);
+    } else if (m_socketType == SocketType::UdpSocket) {
+        udp->setWriteTimeout(sec);
+    }
+}
+
+int Manager::maxReadRetries() const { return client->maxReadRetries(); }
+void Manager::setMaxReadRetries(int retries) { client->setMaxReadRetries(retries); }
+
+bool Manager::autoReconnect() const { return client->autoReconnect(); }
+void Manager::setAutoReconnect(bool enabled) { client->setAutoReconnect(enabled); }
 
 int Manager::bufferSize() const {
     if (m_socketType == SocketType::Client) {
@@ -159,7 +210,7 @@ void Manager::onBind() {
     else if (m_socketType == SocketType::UdpSocket) {
         if (!udp->isOpen()) {
             // Setting some options
-            udp->setBufferSize(64000);
+            udp->setBufferSize(BUFFER_SIZE);
             udp->setAutoRead(true);
 
             // Address validation
@@ -189,8 +240,11 @@ void Manager::onUnBound() {
 }
 
 void Manager::onConnect() {
-    // If socketType is Tcp Client
-    if (m_socketType == SocketType::Client) {
+    if (m_socketType == SocketType::Server) {
+        onBind();
+    }
+    // else If socketType is Tcp Client
+    else if (m_socketType == SocketType::Client) {
         if (!client->isOpen()){
             // Setting some options
             client->setAutoRead(true);
@@ -208,6 +262,7 @@ void Manager::onConnect() {
 
         // else If socketType is Udp
     } else if (m_socketType == SocketType::UdpSocket) {
+        onBind();
         // Validation
         if (!udp->isValid()){
             qCritical() <<  "Error" << "Socket isn't define!";
@@ -226,20 +281,22 @@ void Manager::onConnect() {
 }
 
 void Manager::onDisconnect() {
-    // If socketType is Tcp Client
-    if (m_socketType == SocketType::Client) {
+    if (m_socketType == SocketType::Server) {
+        onUnBound();
+    }
+    // else If socketType is Tcp Client
+    else if (m_socketType == SocketType::Client) {
         // Closing client session
         client->close();
 
         // else If socketType is Udp
     } else if (m_socketType == SocketType::UdpSocket) {
-
+        onUnBound();
     }
 
 }
 void Manager::onSend(QByteArray bytes) {
     std::vector<uint8_t> sendBuffer(bytes.begin(), bytes.end());
-
     if (m_socketType == SocketType::Client) {
         client->write((void *)sendBuffer.data());
 
@@ -358,10 +415,11 @@ void Manager::onNewConnection() {
 //        client->setHighThroughputMode(ui->cbHighThroughput->isChecked());
 //        std::cout << "Client set throughmode: " << client << " Also List size: " << m_clientSockets.size() << std::endl;});
     QObject::connect(client, &TcpClient::disconnected, this, [this, client] () {
-//        client->close();
-        client->deleteLater();
+       client->close();
+        // client->deleteLater();
 //        disconnect(conn);
-        m_acceptedClients.erase(std::remove(m_acceptedClients.begin(), m_acceptedClients.end(), client), m_acceptedClients.end());}, Qt::DirectConnection);
+        m_acceptedClients.erase(std::remove(m_acceptedClients.begin(), m_acceptedClients.end(), client), m_acceptedClients.end());
+        qDebug() << "Accepted Client Size: " << m_acceptedClients.size(); }, Qt::DirectConnection);
     std::cout << "Current thread on NewConnection(): " << QThread::currentThread() << std::endl;
 
 }

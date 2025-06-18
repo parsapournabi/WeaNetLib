@@ -40,6 +40,11 @@ public:
     void setPauseSending(bool pause);
     bool pauseSending() const;
 
+    std::pair<int, unsigned int> connectionTimeout() const;
+    int readTimeout() const;
+    int writeTimeout() const;
+    int maxReadRetries() const;
+    bool autoReconnect() const;
 
 signals:
     void signalData(QByteArray *);
@@ -70,9 +75,11 @@ public slots:
 
     void onHighThroughput(bool enable);
 
-    void onBind();
-
-    void onUnBound();
+    void setConnectionTimeout(int timeout, int retries);
+    void setReadTimeout(int sec);
+    void setWriteTimeout(int sec);
+    void setMaxReadRetries(int retries);
+    void setAutoReconnect(bool enabled);
 
     void onConnect();
 
@@ -102,6 +109,9 @@ public slots:
     void onStateUpdated(SocketState state, const char *state_message);
 
 private:
+    void onBind();
+
+    void onUnBound();
 
     void busyWait(double seconds);
 

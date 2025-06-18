@@ -12,25 +12,21 @@ MainClass::MainClass(QObject *parent)
     //    m_sender->moveToThread(&threadSend);
     //    m_sender->setConnectionType(SocketType::Server);
     //    m_sender->setConnectionSetting(12345, 54321, "172.16.50.50");
-    //    m_sender->onBind();
     //    sender->onConnect();
 
     m_receiver = new Manager();
     m_receiver->moveToThread(&threadRecv);
-    m_receiver->setConnectionType(SocketType::UdpSocket);
+    m_receiver->setConnectionType(SocketType::Server);
     m_receiver->setConnectionSetting(12347, 54321, "127.0.0.1");
-    m_receiver->onHighThroughput(true);
-    //    m_receiver->client->setConnectionTimeout(1, 10);
-    //    m_receiver->client->setReadTimeout(1);
-    //    m_receiver->client->setMaxReadRetries(10);
-    //    m_receiver->client->setAutoReconnect(true);
+    m_receiver->setConnectionTimeout(1, 10);
+    m_receiver->setReadTimeout(1);
+    m_receiver->setMaxReadRetries(10);
+    m_receiver->setAutoReconnect(true);
+    // m_receiver->onHighThroughput(true);
     //    QObject::connect(m_receiver->client, SIGNAL(connected()), this, SLOT([=]() {qDebug() << "CLIENT CONNECTED" ; }));
     //    QObject::connect(m_receiver->client, SIGNAL(disconnected()), this, SLOT([=]() {qDebug() << "CLIENT DISCONNECTED"<< m_receiver->client->autoReconnect();}));
     QObject::connect(m_receiver, SIGNAL(readyReads(QSharedPointer<QList<QSharedPointer<LogDataType>>> ,qreal,qreal)), this, SLOT(onReadyReads(QSharedPointer<QList<QSharedPointer<LogDataType>>> ,qreal,qreal)), Qt::DirectConnection);
 
-
-
-    m_receiver->onBind();
     m_receiver->onConnect();
 
     //    threadSend.start();

@@ -133,7 +133,7 @@ void Udp::receiveDatagram() {
     int recv_bytes = ::recvfrom(m_sockfd, (void *)m_buffer.data(), bufferSize(), MSG_WAITALL, (sockaddr *)&cliaddr, &clilen);
 #endif
     occurError(recv_bytes, SocketError::UnknownSocketError, "Socket read failed!", 1);
-    qDebug() << "Recv Bytes: " << recv_bytes << m_peek;
+    // qDebug() << "Recv Bytes: " << recv_bytes << m_peek;
     if (recv_bytes > 0) {
         void *rawptr = static_cast<void*>(m_buffer.data());
 #ifndef  _WIN32

@@ -69,7 +69,7 @@ TcpClient::TcpClient(int sockfd, struct pollfd fds) {
     m_fds = fds;
 
     // SetOptions
-   setSocketOptions();
+   // setSocketOptions();
 
     // Monitor
 

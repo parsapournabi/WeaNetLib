@@ -37,7 +37,7 @@ MainClass::MainClass(QObject *parent)
 
     // m_receiver->onSendLog("/home/Arvand/Desktop/logDataWearily.csv", -1, 3);
     // m_receiver->onSendLog("C:/Users/PARSA/Desktop/logger.csv", -1, 3);
-    QMetaObject::invokeMethod(m_receiver, "onSendLog", Q_ARG(QString, "C:/Users/PARSA/Desktop/logger.csv"),
+    QMetaObject::invokeMethod(m_receiver, "onSendLog", Q_ARG(QString, "/home/Arvand/Desktop/logDataWearily.csv"),
                               Q_ARG(int, -1),
                               Q_ARG(int, 3));
 }

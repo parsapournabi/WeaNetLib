@@ -4,7 +4,9 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
 #find_package(WeaNet REQUIRED PATHS "D:/parsa/WeaNetLib")
 
 add_executable(WeaNetTests main.cpp
-    src/MainClass.h src/MainClass.cpp)
+    src/MainClass.h src/MainClass.cpp
+    src/monitor.h src/monitor.cpp
+)
 
 if (WIN32)
     cmake_policy(SET CMP0079 NEW)

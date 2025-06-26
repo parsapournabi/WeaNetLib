@@ -12,6 +12,14 @@
 #include "WeaNet/Internal/logdatatype.h"
 
 //#define CELL_DATA
+//#define USE_UNION
+#define MULTI_EMIT
+
+#ifdef CELL_DATA
+// Include cellData class Path below
+#include ""
+
+#endif
 
 using namespace WeaNet;
 namespace WeaNet {
@@ -33,6 +41,10 @@ public:
     int senderPort() const;
 
     int bufferSize() const;
+
+    int csvReachedIndex() const;
+
+    int csvLength() const;
 
     double receiveSpeed() const;
     double sendSpeed() const;
@@ -85,7 +97,7 @@ public slots:
 
     void onDisconnect();
 
-    void onSend(QByteArray bytes);
+    void onSend(QByteArray &bytes);
 
     /// @details: repeats == -1 means infinity untill pauseSet()
     void onSendLog(QString csv_path, int repeats = 1, int interval_index = 3);
@@ -118,7 +130,7 @@ private:
 public:
     // Public variables
 
-    TcpClient *client = new TcpClient();public:
+    TcpClient *client = new TcpClient();
     TcpServer *server = new TcpServer();
     Udp *udp = new Udp();
 
@@ -136,6 +148,8 @@ private:
     double RX_bytes = 0.0;
     double TX_MB_S = 0.0;
     double TX_bytes = 0.0;
+    double m_rxSpeed = 0.0;
+    double m_txSpeed = 0.0;
 
     SocketType m_socketType;
     const char *m_host = "";

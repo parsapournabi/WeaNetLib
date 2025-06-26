@@ -8,7 +8,7 @@
 #include <QDataStream>
 #include <cmath>
 
-#include "Manager.h"
+#include "WeaNet/Manager.h"
 #include "WeaNet/Internal/parserfile.h"
 
 //#define USE_UNION
@@ -180,8 +180,12 @@ int Manager::bufferSize() const {
     return -1;
 }
 
-double Manager::receiveSpeed() const { return RX_MB_S; }
-double Manager::sendSpeed() const { return TX_MB_S; }
+int Manager::csvReachedIndex() const { return m_csvReachedIndex; }
+
+int Manager::csvLength() const { return m_csvDataLen; }
+
+double Manager::receiveSpeed() const { return m_rxSpeed; }
+double Manager::sendSpeed() const { return m_txSpeed; }
 
 void Manager::setPauseSending(bool pause) { m_pauseSending = pause; }
 bool Manager::pauseSending() const { return m_pauseSending; }
@@ -295,7 +299,7 @@ void Manager::onDisconnect() {
     }
 
 }
-void Manager::onSend(QByteArray bytes) {
+void Manager::onSend(QByteArray &bytes) {
     std::vector<uint8_t> sendBuffer(bytes.begin(), bytes.end());
     if (m_socketType == SocketType::Client) {
         client->write((void *)sendBuffer.data());
@@ -446,7 +450,8 @@ void Manager::onDataReceived(void *p_buffer, size_t buf_len) {
     if (std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - m_rxStartTime).count() > 10e8) {
         // Speed calculating
         RX_MB_S = std::round((RX_bytes / 10e5) * 100.0) / 100.0;
-        emit signalRecvSpeed(RX_MB_S);
+        m_rxSpeed = RX_MB_S;
+        emit signalRecvSpeed(m_rxSpeed);
         RX_bytes = 0.0;
         RX_MB_S = 0.0;
         m_rxStartTime = clock::now();
@@ -468,8 +473,8 @@ void Manager::onDataReceivedUdp(void *p_buffer, size_t buf_len, const char *host
 #endif
     if (std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - m_rxStartTime).count() > 10e8) {
         RX_MB_S = std::round((RX_bytes / 10e5) * 100.0) / 100.0;
-        emit signalRecvSpeed(RX_MB_S);
-
+        m_rxSpeed = RX_MB_S;
+        emit signalRecvSpeed(m_rxSpeed);
         RX_bytes = 0.0;
         RX_MB_S = 0.0;
         m_rxStartTime = clock::now();
@@ -537,7 +542,8 @@ void Manager::onBytesWritten(int numSentBytes) {
     //    std::cout << "Bytes sent" << numSentBytes << std::endl;
     if (std::chrono::duration_cast<std::chrono::nanoseconds>(clock::now() - m_txStartTime).count() > 10e8) {
         TX_MB_S = std::round((TX_bytes / 10e5) * 100.0) / 100.0;
-        emit signalSendSpeed(TX_MB_S);
+        m_txSpeed = TX_MB_S;
+        emit signalSendSpeed(m_txSpeed);
 //        std::ostringstream rounded;
 //        rounded << std::fixed << std::setprecision(2) << TX_MB_S;
 //        std::string throughput = rounded.str() + " MB/s";

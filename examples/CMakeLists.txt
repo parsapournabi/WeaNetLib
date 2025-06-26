@@ -4,7 +4,6 @@
 
 # DON'T IMPORT
 add_library(WeaNetExamples
-    main.cpp
     TcpClientExample.cpp
     TcpServerExample.cpp
     UdpExample.cpp

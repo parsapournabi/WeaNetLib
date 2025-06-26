@@ -1,8 +1,7 @@
 #include <QQmlApplicationEngine>
 #include <QGuiApplication>
 
-
-#include <src/MainClass.h>
+#include "src/MainClass.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,6 +11,8 @@ int main(int argc, char *argv[])
     MainClass mainC;
 
     qRegisterMetaType<QSharedPointer<QList<QSharedPointer<LogDataType>>>>("QSharedPointer<QList<QSharedPointer<LogDataType>>>");
+//    qRegisterMetaType<QSharedPointer<MonitorData>>("QSharedPointer<MonitorData>");
+    qRegisterMetaType<Monitor::monitorPtr>("monitorPtr");
 
     return app.exec();
 }

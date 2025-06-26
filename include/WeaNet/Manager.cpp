@@ -11,9 +11,6 @@
 #include "WeaNet/Manager.h"
 #include "WeaNet/Internal/parserfile.h"
 
-//#define USE_UNION
-#define MULTI_EMIT
-
 namespace WeaNet {
 const int BUFFER_SIZE = 64000;
 const int TCP_BUFFER_SIZE = 1040;

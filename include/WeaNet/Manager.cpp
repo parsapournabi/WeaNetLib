@@ -386,7 +386,7 @@ void Manager::sendingCsvProcess() {
             onSend(byte);
 
             m_startTime = clock::now();
-            if (m_csvReachedIndex < m_csvDataLen) {
+            if (m_csvReachedIndex + 1 < m_csvDataLen) {
                 int timeIndex = m_interValIndex;
                 busyWait(m_csvData[m_csvReachedIndex + 1][timeIndex] - m_csvData[m_csvReachedIndex][timeIndex]);
             }

@@ -1,5 +1,6 @@
 #include <QFile>
 #include <QEventLoop>
+#include <QDir>
 
 #include "MainClass.h"
 #include "WeaNet/Internal/parserfile.h"
@@ -11,7 +12,7 @@ MainClass::MainClass(QObject *parent)
     m_receiver = new Manager();
     m_receiver->moveToThread(&threadRecv);    
     m_receiver->setConnectionType(SocketType::UdpSocket);
-    m_receiver->setConnectionSetting(54321, 12345, "172.16.50.50");
+    m_receiver->setConnectionSetting(12345,54321,"127.0.0.1");
     m_receiver->setConnectionTimeout(1, 10);
     m_receiver->setReadTimeout(1);
     m_receiver->setMaxReadRetries(10);
@@ -38,7 +39,13 @@ MainClass::MainClass(QObject *parent)
     //             "/home/Arvand/Desktop/logDataWearily.csv", 3000);
 
     // m_receiver->onSendLog("/home/Arvand/Desktop/logDataWearily.csv", -1, 3);
-    QMetaObject::invokeMethod(m_receiver, "onSendLog", Q_ARG(QString, "/home/Arvand/Desktop/logData-slow.csv"),
+    QDir directory("tests");
+    QString path = directory.filePath("logData-slow.csv");
+    QString absolutePath = directory.absoluteFilePath("logData-slow.csv");
+
+    qDebug() << "PATH: " << path << "ABS PATH: " << absolutePath;
+
+    QMetaObject::invokeMethod(m_receiver, "onSendLog", Q_ARG(QString, "tests/logData-slow.csv" /*"/home/Arvand/wearily/WearilyNet/tests/logData-slow.csv"*/),
                               Q_ARG(int, -1),
                               Q_ARG(int, 3));
 }

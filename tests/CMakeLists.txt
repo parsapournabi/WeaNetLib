@@ -6,6 +6,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick)
 add_executable(WeaNetTests main.cpp
     src/MainClass.h src/MainClass.cpp
     src/monitor.h src/monitor.cpp
+    logData-slow.csv
 )
 
 if (WIN32)
